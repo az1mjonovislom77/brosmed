@@ -30,11 +30,16 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     class UserRoles(models.TextChoices):
-        ADMIN = 'a', "admin"
-        WORKER = 'w', "worker"
+        SUPERADMIN = 's', "superadmin"
+        RECEPTION = 'r', "reception"
+        LABORATORY = 'l', "laboratory"
+        DOCTOR = 'd', "doctor"
+        CASHIER = 'c', "cashier"
 
-    name = models.CharField(max_length=100)
-    username = models.CharField(max_length=100, unique=True)
+    full_name = models.CharField(max_length=100, null=True, blank=True)
+    username = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    phone = models.CharField(max_length=100, null=True, blank=True)
+    password = models.CharField(max_length=100, null=True, blank=True)
     role = models.CharField(max_length=10, choices=UserRoles.choices)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -51,7 +56,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return self.name
+        return self.full_name
 
     class Meta:
         db_table = 'user'
