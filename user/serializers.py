@@ -66,8 +66,3 @@ class MeSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", 'department', "full_name", 'username', "phone_number", 'role', 'is_active')
-
-        extra_kwargs = {
-            "id": {"read_only": True},
-            "phone_number": {'read_only': True},
-        }
