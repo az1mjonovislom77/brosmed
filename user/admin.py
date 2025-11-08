@@ -1,0 +1,9 @@
+from django.contrib import admin
+from modeltranslation.admin import TranslationAdmin
+
+from user.models import User
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('id', 'username', 'full_name', 'role')
