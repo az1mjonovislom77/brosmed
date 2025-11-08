@@ -1,5 +1,4 @@
 from django.contrib import admin
-from modeltranslation.admin import TranslationAdmin
 
 from user.models import User
 
