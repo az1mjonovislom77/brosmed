@@ -24,3 +24,4 @@ class Department(models.Model):
         db_table = 'department'
         verbose_name = 'Department'
         verbose_name_plural = 'Department'
+
