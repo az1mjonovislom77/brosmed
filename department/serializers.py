@@ -10,9 +10,9 @@ class DepartmentTypesSerializer(serializers.ModelSerializer):
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
-    department_types = DepartmentTypesSerializer(read_only=True)
+    department_types = DepartmentTypesSerializer(read_only=True, many=True)
     department_types_id = serializers.PrimaryKeyRelatedField(queryset=DepartmentTypes.objects.all(),
-                                                             source='department_types', write_only=True)
+                                                             source='department_types', many=True, write_only=True)
 
     class Meta:
         model = Department

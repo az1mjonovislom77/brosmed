@@ -15,7 +15,7 @@ class DepartmentTypes(models.Model):
 
 class Department(models.Model):
     title = models.CharField(max_length=100)
-    department_types = models.ForeignKey(DepartmentTypes, on_delete=models.SET_NULL, null=True, blank=True)
+    department_types = models.ManyToManyField(DepartmentTypes, null=True, blank=True)
 
     def __str__(self):
         return self.title
