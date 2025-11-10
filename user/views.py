@@ -80,35 +80,3 @@ class MeAPIView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
-
-
-@extend_schema(tags=['Login'])
-class LoginAPIView(APIView):
-    permission_classes = [AllowAny]
-
-    @extend_schema(request=None, responses={200: dict})
-    def post(self, request):
-        phone_number = request.data.get('phone_number')
-        password = request.data.get('password')
-
-        user = authenticate(username=phone_number, password=password)
-        if user is None:
-            return JsonResponse({"detail": "Invalid credentials"}, status=401)
-
-        tokens = UserTokenService.get_tokens_for_user(user)
-
-        response = JsonResponse({
-            "access": tokens['access'],
-            "detail": "Login successful"
-        })
-
-        response.set_cookie(
-            key='refresh_token',
-            value=tokens['refresh'],
-            httponly=True,
-            secure=True,
-            samesite='Strict',
-            max_age=60 * 60 * 24 * 7
-        )
-
-        return response
