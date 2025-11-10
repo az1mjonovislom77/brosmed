@@ -1,13 +1,11 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.generics import RetrieveAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from user.models import User, UserTokenService
 from user.serializers import SignInSerializer, UserCreateSerializer, LogoutSerializer, MeSerializer
 from rest_framework.response import Response
-from django.http import JsonResponse
-from django.contrib.auth import authenticate
 
 
 class PartialPutMixin:
