@@ -26,6 +26,7 @@ LOCAL_APPS = [
     'django.contrib.staticfiles',
     'user',
     'department',
+    'utils'
 ]
 
 THIRD_PARTY_APPS = [
@@ -55,7 +56,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3003",
     "http://localhost:3004",
 ]
-
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
