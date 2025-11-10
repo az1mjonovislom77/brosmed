@@ -1,11 +1,13 @@
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.generics import RetrieveAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from user.models import User, UserTokenService
 from user.serializers import SignInSerializer, UserCreateSerializer, LogoutSerializer, MeSerializer
 from rest_framework.response import Response
+from django.http import JsonResponse
+from django.contrib.auth import authenticate
 
 
 class PartialPutMixin:
@@ -36,12 +38,26 @@ class SignInAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        return Response({
+        tokens = UserTokenService.get_tokens_for_user(user)
+        response = Response({
             'success': True,
             'status_code': 200,
             'message': 'User logged in successfully',
-            'data': UserTokenService.get_tokens_for_user(user),
+            'data': {
+                'access': tokens['access'],
+            },
         }, status=status.HTTP_200_OK)
+
+        response.set_cookie(
+            key='refresh_token',
+            value=tokens['refresh'],
+            httponly=True,
+            secure=True,
+            samesite='Strict',
+            max_age=60 * 60 * 24 * 7
+        )
+
+        return response
 
 
 @extend_schema(tags=['Login'])
@@ -64,3 +80,35 @@ class MeAPIView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+@extend_schema(tags=['Login'])
+class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(request=None, responses={200: dict})
+    def post(self, request):
+        phone_number = request.data.get('phone_number')
+        password = request.data.get('password')
+
+        user = authenticate(username=phone_number, password=password)
+        if user is None:
+            return JsonResponse({"detail": "Invalid credentials"}, status=401)
+
+        tokens = UserTokenService.get_tokens_for_user(user)
+
+        response = JsonResponse({
+            "access": tokens['access'],
+            "detail": "Login successful"
+        })
+
+        response.set_cookie(
+            key='refresh_token',
+            value=tokens['refresh'],
+            httponly=True,
+            secure=True,
+            samesite='Strict',
+            max_age=60 * 60 * 24 * 7
+        )
+
+        return response
