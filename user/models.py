@@ -33,6 +33,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         CASHIER = 'c', "cashier"
 
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    passport = models.CharField(max_length=100, null=True, blank=True)
     full_name = models.CharField(max_length=100, null=True, blank=True)
     username = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=100, unique=True)

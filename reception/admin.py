@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from reception.models import Patient
+
+
+@admin.register(Patient)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'user')
