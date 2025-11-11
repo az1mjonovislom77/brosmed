@@ -28,7 +28,8 @@ LOCAL_APPS = [
     'department',
     'utils',
     'doctor',
-    'reception'
+    'reception',
+    'laboratory',
 ]
 
 THIRD_PARTY_APPS = [
