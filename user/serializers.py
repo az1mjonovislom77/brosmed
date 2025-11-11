@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['department', 'full_name', 'username', 'phone_number', 'password', 'role', 'is_active']
+        fields = ['id', 'department', 'full_name', 'username', 'phone_number', 'password', 'role', 'is_active', 'price']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):

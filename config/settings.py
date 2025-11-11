@@ -26,7 +26,9 @@ LOCAL_APPS = [
     'django.contrib.staticfiles',
     'user',
     'department',
-    'utils'
+    'utils',
+    'doctor',
+    'reception'
 ]
 
 THIRD_PARTY_APPS = [
