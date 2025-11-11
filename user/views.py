@@ -4,7 +4,8 @@ from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from user.models import User, UserTokenService
-from user.serializers import SignInSerializer, UserCreateSerializer, LogoutSerializer, MeSerializer
+from user.serializers import SignInSerializer, UserCreateSerializer, LogoutSerializer, MeSerializer, \
+    UserDetailSerializer
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
@@ -17,15 +18,15 @@ class PartialPutMixin:
 
 
 @extend_schema(tags=['User'])
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet, PartialPutMixin):
     queryset = User.objects.all()
-    serializer_class = UserCreateSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
 
-    def update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        return super().update(request, *args, **kwargs)
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return UserDetailSerializer
+        return UserCreateSerializer
 
 
 @extend_schema(tags=['Login'])

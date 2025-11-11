@@ -1,8 +1,27 @@
 from rest_framework import serializers
+
+from reception.models import Patient
 from user.models import User
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+
+
+class PatientMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Patient
+        fields = ['id', 'name', 'last_name', 'middle_name', 'gender', 'birth_date', 'phone_number', 'address',
+                  'disease', 'payment_status', 'patient_status']
+        read_only_fields = fields
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    patients = PatientMiniSerializer(source='patient_users', many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'passport', 'department', 'full_name', 'username', 'phone_number', 'password', 'role',
+                  'is_active', 'price', 'patients']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

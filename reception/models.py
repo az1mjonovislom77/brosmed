@@ -23,7 +23,7 @@ class Patient(models.Model):
         recovered = 'rc', 'RECOVERED'
 
     department = models.ForeignKey(Department, null=True, blank=True, on_delete=models.SET_NULL)
-    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='patient_users')
     name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     middle_name = models.CharField(max_length=100, null=True, blank=True)
