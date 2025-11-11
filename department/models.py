@@ -15,7 +15,9 @@ class Department(models.Model):
 
 class DepartmentTypes(models.Model):
     title = models.CharField(max_length=200)
-    department = models.ForeignKey(Department,on_delete=models.SET_NULL,related_name='department_types', null=True, blank=True)
+    price = models.CharField(max_length=200, null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, related_name='department_types', null=True,
+                                   blank=True)
 
     def __str__(self):
         return self.title

@@ -6,7 +6,7 @@ from department.models import Department, DepartmentTypes
 class DepartmentTypesSerializer(serializers.ModelSerializer):
     class Meta:
         model = DepartmentTypes
-        fields = ['id', 'department', 'title', 'title_uz', 'title_ru']
+        fields = ['id', 'department', 'title', 'title_uz', 'title_ru', 'price']
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
