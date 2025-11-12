@@ -1,6 +1,6 @@
 from django.db import models
 
-from department.models import Department
+from department.models import Department, DepartmentTypes
 from user.models import User
 
 
@@ -23,6 +23,7 @@ class Patient(models.Model):
         recovered = 'rc', 'RECOVERED'
 
     department = models.ForeignKey(Department, null=True, blank=True, on_delete=models.SET_NULL)
+    department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL)
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='patient_users')
     name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -34,8 +35,22 @@ class Patient(models.Model):
     disease = models.TextField(null=True, blank=True)
     payment_status = models.CharField(max_length=100, choices=PaymentStatus.choices, default=PaymentStatus.pending)
     patient_status = models.CharField(max_length=100, choices=PatientStatus.choices, null=True, blank=True)
-    partial_payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
-                                                 help_text="Agar qisman to'langan bo'lsa, summa")
+    partial_payment_amount = models.FloatField(default=0)
+    total_amount = models.FloatField(default=0)
+    paid_amount = models.FloatField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            if self.user and getattr(self.user, 'price', None):
+                self.total_amount = float(self.user.price)
+            elif self.department_types and getattr(self.department_types, 'price', None):
+                self.total_amount = float(self.department_types.price)
+            else:
+                self.total_amount = 0
+            self.payment_status = self.PaymentStatus.pending
+            self.paid_amount = 0
+            self.partial_payment_amount = 0
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name + ' ' + self.last_name

@@ -19,3 +19,4 @@ class DepartmentAdmin(TranslationAdmin):
 @admin.register(DepartmentTypes)
 class DepartmentTypesAdmin(TranslationAdmin):
     list_display = ('id', 'title')
+    inlines = [PatientInline]

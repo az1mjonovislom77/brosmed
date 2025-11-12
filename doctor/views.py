@@ -12,4 +12,5 @@ class DoctorAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return User.objects.filter(role=User.UserRoles.DOCTOR)
+        department_id = self.kwargs.get('department_id')
+        return User.objects.filter(role=User.UserRoles.DOCTOR, department_id=department_id)
