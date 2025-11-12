@@ -40,7 +40,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=10, choices=UserRoles.choices)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    price = models.CharField(max_length=100, null=True, blank=True)
+    price = models.CharField(max_length=100, default=0)
 
     groups = models.ManyToManyField(Group, related_name='custom_user_set', blank=True, verbose_name='groups',
                                     help_text='The groups this user belongs to')

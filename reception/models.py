@@ -34,6 +34,8 @@ class Patient(models.Model):
     disease = models.TextField(null=True, blank=True)
     payment_status = models.CharField(max_length=100, choices=PaymentStatus.choices, default=PaymentStatus.pending)
     patient_status = models.CharField(max_length=100, choices=PatientStatus.choices, null=True, blank=True)
+    partial_payment_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                                 help_text="Agar qisman to'langan bo'lsa, summa")
 
     def __str__(self):
         return self.name + ' ' + self.last_name

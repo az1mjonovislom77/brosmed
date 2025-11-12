@@ -30,6 +30,7 @@ LOCAL_APPS = [
     'doctor',
     'reception',
     'laboratory',
+    'cashier'
 ]
 
 THIRD_PARTY_APPS = [
@@ -50,6 +51,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3002",
     "http://localhost:3003",
     "http://localhost:3004",
+    "https://brosmedcrm-gz9q.vercel.app"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -58,6 +60,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3002",
     "http://localhost:3003",
     "http://localhost:3004",
+    "https://brosmedcrm-gz9q.vercel.app"
 ]
 
 MIDDLEWARE = [
