@@ -22,7 +22,8 @@ class AnalysisSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Analysis
-        fields = ['id', 'patient', 'department_types', 'analysis_result', 'status', 'files']
+        fields = ['id', 'patient', 'department_types', 'analysis_result', 'analysis_result_uz',
+                  'analysis_result_ru', 'status', 'files']
 
     def create(self, validated_data):
         request = self.context.get('request')
