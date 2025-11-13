@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 from reception.models import Patient
 from .serializers import CashierSerializer
+from django.utils import timezone
 
 
 @extend_schema(tags=['Cashier'])
