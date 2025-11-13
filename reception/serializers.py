@@ -8,4 +8,4 @@ class PatientSerializer(serializers.ModelSerializer):
         model = Patient
         fields = ['id', 'user', 'department', 'department_types', 'name', 'last_name', 'middle_name', 'gender',
                   'birth_date', 'phone_number', 'address', 'disease', 'disease_uz', 'disease_ru', 'payment_status',
-                  'patient_status']
+                  'patient_status', 'created_at']
