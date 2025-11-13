@@ -9,10 +9,10 @@ class CashierSerializer(serializers.ModelSerializer):
         model = Patient
         fields = ['id', 'user', 'department', 'department_types', 'patient_id', 'name', 'last_name', 'middle_name',
                   'gender', 'birth_date', 'phone_number', 'address', 'disease',
-                  'payment_status', 'total_amount', 'paid_amount', 'partial_payment_amount']
+                  'payment_status', 'total_amount', 'paid_amount', 'partial_payment_amount', 'created_at']
         read_only_fields = ['id', 'user', 'department', 'name', 'last_name', 'middle_name', 'gender',
                             'birth_date', 'phone_number', 'address', 'disease', 'total_amount', 'paid_amount',
-                            'department_types']
+                            'department_types', 'created_at']
 
     def update(self, instance, validated_data):
         status = validated_data.get('payment_status', instance.payment_status)
