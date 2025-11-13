@@ -32,6 +32,7 @@ class UserViewSet(viewsets.ModelViewSet, PartialPutMixin):
 @extend_schema(tags=['Login'])
 class SignInAPIView(APIView):
     serializer_class = SignInSerializer
+    authentication_classes = []
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -63,6 +64,7 @@ class SignInAPIView(APIView):
 @extend_schema(tags=['Login'])
 class RefreshTokenAPIView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
