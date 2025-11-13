@@ -38,6 +38,8 @@ class Patient(models.Model):
     partial_payment_amount = models.FloatField(default=0)
     total_amount = models.FloatField(default=0)
     paid_amount = models.FloatField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if self._state.adding:

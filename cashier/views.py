@@ -39,20 +39,32 @@ class CashierViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
+        today = timezone.now().date()
+
+        # faqat bugungi confirmed bemorlar
+        today_confirmed = Patient.objects.filter(
+            payment_status=Patient.PaymentStatus.confirmed,
+            updated_at__date=today
+        )
+
         confirmed_patients = Patient.objects.filter(payment_status=Patient.PaymentStatus.confirmed)
         partial_patients = Patient.objects.filter(payment_status=Patient.PaymentStatus.partially_confirmed)
 
         all_unpaid_patients = Patient.objects.filter(
-            payment_status__in=[Patient.PaymentStatus.pending, Patient.PaymentStatus.partially_confirmed])
+            payment_status__in=[Patient.PaymentStatus.pending, Patient.PaymentStatus.partially_confirmed]
+        )
 
         total_confirmed = sum(float(p.paid_amount or 0) for p in confirmed_patients)
         total_partial = sum(float(p.partial_payment_amount or 0) for p in partial_patients)
         total_pending = sum(
             float(p.total_amount or 0) - (float(p.paid_amount or 0) + float(p.partial_payment_amount or 0))
-            for p in all_unpaid_patients)
+            for p in all_unpaid_patients
+        )
+
+        today_income = sum(float(p.paid_amount or 0) for p in today_confirmed)
 
         data = {
-            "bugungi_daromad": f"{total_confirmed:,.0f} so'm",
+            "bugungi_daromad": f"{today_income:,.0f} so'm",
             "tolangan": f"{total_confirmed:,.0f} so'm",
             "qisman_tolangan": f"{total_partial:,.0f} so'm",
             "kutilmoqda": f"{total_pending:,.0f} so'm",
