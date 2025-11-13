@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
@@ -12,6 +13,7 @@ class CashierViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all().order_by('-id')
     serializer_class = CashierSerializer
     http_method_names = ['get', 'post', 'put', 'delete']
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         patient_id = request.data.get('patient_id')
