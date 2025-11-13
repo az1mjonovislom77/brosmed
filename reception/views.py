@@ -22,4 +22,4 @@ class PatientDoctorAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Patient.objects.filter(user=self.request.user)
+        return Patient.objects.filter(user=self.request.user).exclude(patient_status=Patient.PatientStatus.finished)
