@@ -11,6 +11,7 @@ class Consultations(models.Model):
     recommendation = models.TextField(max_length=500)
     recipe = models.TextField(max_length=500)
     patient_status = models.CharField(max_length=100, choices=Patient.PatientStatus.choices, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.patient.name
