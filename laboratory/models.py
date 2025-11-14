@@ -12,8 +12,10 @@ class Analysis(models.Model):
 
     patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
     department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL)
-    analysis_result = models.CharField(max_length=100)
+    analysis_result = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=100, choices=Status.choices, default=Status.new)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return str(self.id)
