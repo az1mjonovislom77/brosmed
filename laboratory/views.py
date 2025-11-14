@@ -34,7 +34,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
             'yangi_tahlil': newanalysiscount,
             'jarayondagi_tahlil': inprogressalaysiscount,
             'yakunlangan_tahlil': finishedanalysiscount,
-            'oxirgi_tshlillar': (AnalysisSerializer(lastanalysis, many=True, context={'request': request}).data if
+            'oxirgi_tahlillar': (AnalysisSerializer(lastanalysis, many=True, context={'request': request}).data if
                                  lastanalysis else None)
         }
 

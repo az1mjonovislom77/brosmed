@@ -34,7 +34,7 @@ class Patient(models.Model):
     address = models.TextField(null=True, blank=True)
     disease = models.TextField(null=True, blank=True)
     payment_status = models.CharField(max_length=100, choices=PaymentStatus.choices, default=PaymentStatus.pending)
-    patient_status = models.CharField(max_length=100, choices=PatientStatus.choices, null=True, blank=True)
+    patient_status = models.CharField(max_length=100, choices=PatientStatus.choices, default=PatientStatus.in_register)
     partial_payment_amount = models.FloatField(default=0)
     total_amount = models.FloatField(default=0)
     paid_amount = models.FloatField(default=0)
