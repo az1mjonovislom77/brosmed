@@ -25,6 +25,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         newanalysiscount = Analysis.objects.filter(status=Analysis.Status.new, created_at__date=today).count()
         inprogressalaysiscount = Analysis.objects.filter(status=Analysis.Status.in_progress,
                                                          created_at__date=today).count()
+        lastanalysis = Analysis.objects.filter(created_at__date=today).order_by('-created_at').first()
         finishedanalysiscount = Analysis.objects.filter(status=Analysis.Status.finished, created_at__date=today).count()
 
         data = {
@@ -33,6 +34,8 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
             'yangi_tahlil': newanalysiscount,
             'jarayondagi_tahlil': inprogressalaysiscount,
             'yakunlangan_tahlil': finishedanalysiscount,
+            'oxirgi_tshlillar': (AnalysisSerializer(lastanalysis, context={'request': request}).data if
+                                 lastanalysis else None)
         }
 
         return Response(data, status=status.HTTP_200_OK)
