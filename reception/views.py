@@ -29,6 +29,7 @@ class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
         erkaklar = Patient.objects.filter(gender=Patient.GenderChoice.MALE).count()
         ayollar = Patient.objects.filter(gender=Patient.GenderChoice.FEMALE).count()
         yangi_tugilganlar = Patient.objects.filter(birth_date__gte=one_year_ago).count()
+        oxirgi_bemorlar = Patient.objects.all().order_by('-created_at')[:10]
 
         data = {
             "qabul_qilinganlar": qabul_qilinganlar,
@@ -36,6 +37,8 @@ class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
             "erkaklar": erkaklar,
             "ayollar": ayollar,
             "yangi_tugilganlar": yangi_tugilganlar,
+            'oxirgi_bemorlar': (PatientSerializer(oxirgi_bemorlar, many=True, context={'request': request}).data if
+                                 oxirgi_bemorlar else None)
         }
 
         return Response(data, status=status.HTTP_200_OK)
