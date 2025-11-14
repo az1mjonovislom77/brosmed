@@ -22,6 +22,14 @@ class DoctorAPIView(ListAPIView):
         department_id = self.kwargs.get('department_id')
         return User.objects.filter(role=User.UserRoles.DOCTOR, department_id=department_id)
 
+
+@extend_schema(tags=['Consultations'])
+class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
+    queryset = Consultations.objects.all()
+    serializer_class = ConsultationsSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'put', 'delete']
+
     @action(detail=False, methods=['get'])
     def stats(self, request):
         today = timezone.now().date()
@@ -47,11 +55,3 @@ class DoctorAPIView(ListAPIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
-
-
-@extend_schema(tags=['Consultations'])
-class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
-    queryset = Consultations.objects.all()
-    serializer_class = ConsultationsSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post', 'put', 'delete']
