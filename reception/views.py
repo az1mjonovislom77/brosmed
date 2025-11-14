@@ -5,7 +5,6 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
-
 from reception.models import Patient
 from reception.serializers import PatientSerializer
 from user.views import PartialPutMixin
@@ -38,7 +37,7 @@ class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
             "ayollar": ayollar,
             "yangi_tugilganlar": yangi_tugilganlar,
             'oxirgi_bemorlar': (PatientSerializer(oxirgi_bemorlar, many=True, context={'request': request}).data if
-                                 oxirgi_bemorlar else None)
+                                oxirgi_bemorlar else None)
         }
 
         return Response(data, status=status.HTTP_200_OK)
