@@ -10,7 +10,7 @@ class Analysis(models.Model):
         in_progress = 'ip', 'IN_PROGRESS'
         finished = 'f', 'FINISHED'
 
-    patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
     department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL)
     analysis_result = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=100, choices=Status.choices, default=Status.new)
