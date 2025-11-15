@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from laboratory.models import Analysis
-from laboratory.serializers import AnalysisSerializer
+from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer
 from user.views import PartialPutMixin
 from rest_framework.response import Response
 
@@ -15,6 +15,11 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     serializer_class = AnalysisSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return AnalysisPostSerializer
+        return super().get_serializer_class()
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
