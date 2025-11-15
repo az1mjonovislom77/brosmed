@@ -12,7 +12,7 @@ from django.utils import timezone
 class CashierViewSet(viewsets.ModelViewSet):
     queryset = Patient.objects.all().order_by('-id')
     serializer_class = CashierSerializer
-    http_method_names = ['get', 'post', 'put', 'delete']
+    http_method_names = ['get', 'post', 'delete']
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
