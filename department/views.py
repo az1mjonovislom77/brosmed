@@ -2,8 +2,8 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from department.models import Department, DepartmentTypes
-from department.serializers import DepartmentSerializer, DepartmentTypesSerializer
+from department.models import Department, DepartmentTypes, Result
+from department.serializers import DepartmentSerializer, DepartmentTypesSerializer, ResultSerializer
 from user.views import PartialPutMixin
 
 
@@ -21,3 +21,11 @@ class DepartmentViewSet(PartialPutMixin, viewsets.ModelViewSet):
     serializer_class = DepartmentSerializer
     http_method_names = ['get', 'post', 'put', 'delete']
     permission_classes = [IsAuthenticated]
+
+
+@extend_schema(tags=['Result'])
+class ResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'put', 'delete']

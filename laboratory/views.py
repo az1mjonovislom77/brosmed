@@ -3,13 +3,11 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from laboratory.models import Analysis, Result
-from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
-    ResultSerializer
+from laboratory.models import Analysis
+from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer
 from user.views import PartialPutMixin
 from rest_framework.response import Response
 from django.db.models import Q
-from rest_framework import generics
 
 
 @extend_schema(tags=['Analysis'])
@@ -71,20 +69,3 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
-
-
-@extend_schema(tags=['Result'])
-class ResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
-    queryset = Result.objects.all()
-    serializer_class = ResultSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post', 'put', 'delete']
-
-
-@extend_schema(tags=['Result'])
-class ResultByDepartmentDetailAPIView(generics.ListAPIView):
-    serializer_class = ResultSerializer
-
-    def get_queryset(self):
-        department_type_id = self.kwargs.get('department_type_id')
-        return Result.objects.filter(analysis__department_types_id=department_type_id)
