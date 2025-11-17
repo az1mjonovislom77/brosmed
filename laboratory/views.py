@@ -4,9 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from laboratory.models import Analysis
-from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer
+from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer
 from user.views import PartialPutMixin
 from rest_framework.response import Response
+from django.db.models import Q
 
 
 @extend_schema(tags=['Analysis'])
@@ -44,3 +45,26 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+    @extend_schema(methods=['POST'],request=AnalysisSearchInputSerializer,responses={200: AnalysisSerializer(many=True)},)
+    @action(detail=False, methods=['post'])
+    def search(self, request):
+        serializer = AnalysisSearchInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        search_value = serializer.validated_data['search']
+
+        queryset = Analysis.objects.filter(
+            Q(analysis_result__icontains=search_value)
+            | Q(analysis_result_uz__icontains=search_value)
+            | Q(analysis_result_ru__icontains=search_value)
+            | Q(status__icontains=search_value)
+            | Q(patient__name__icontains=search_value)
+            | Q(patient__last_name__icontains=search_value)
+            | Q(patient__middle_name__icontains=search_value)
+            | Q(patient__phone_number__icontains=search_value)
+            | Q(department_types__title__icontains=search_value)
+        ).distinct()
+
+        output = AnalysisSerializer(queryset, many=True, context={'request': request})
+        return Response(output.data)

@@ -89,3 +89,8 @@ class AnalysisNestSerializer(serializers.ModelSerializer):
             AnalysisFile.objects.create(analysis=analysis, file=file)
 
         return analysis
+
+
+class AnalysisSearchInputSerializer(serializers.Serializer):
+    search = serializers.CharField(required=True)
+
