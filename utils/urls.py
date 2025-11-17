@@ -1,8 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from utils.serializers import ClinicStatsInputSerializer
-from utils.views import ClinicAboutViewSet, ClinicStatsAPIView
+from utils.views import ClinicStatsAPIView, ClinicAboutViewSet
 
 router = DefaultRouter()
 router.register('clinicabout', ClinicAboutViewSet)

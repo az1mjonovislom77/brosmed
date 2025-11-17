@@ -21,3 +21,16 @@ class ClinicStatsSerializer(serializers.Serializer):
 class ClinicStatsInputSerializer(serializers.Serializer):
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
+
+
+class DepartmentStatsSerializer(serializers.Serializer):
+    department = serializers.CharField()
+    jami_bemorlar = serializers.IntegerField()
+    konsultatsiyalar = serializers.IntegerField()
+    tahlillar = serializers.IntegerField()
+    tolovlar = serializers.FloatField()
+
+
+class ClinicStatsResponseSerializer(serializers.Serializer):
+    umumiy = ClinicStatsSerializer()
+    departments = DepartmentStatsSerializer(many=True)
