@@ -1,11 +1,13 @@
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.response import Response
 from department.models import Department, DepartmentTypes, Result, AnalysisResult
 from department.serializers import DepartmentSerializer, DepartmentTypesSerializer, ResultSerializer, \
-    AnalysisResultPostSerializer
+    AnalysisResultPostSerializer, AnalysisResultCreateSerializer
 from user.views import PartialPutMixin
+from rest_framework.decorators import action
+from rest_framework.parsers import JSONParser
 
 
 @extend_schema(tags=['DepartmentTypes'])
@@ -33,8 +35,16 @@ class ResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
 
 @extend_schema(tags=['AnalysisResult'])
-class AnalysisResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
+class AnalysisResultViewSet(viewsets.ModelViewSet):
     queryset = AnalysisResult.objects.all()
-    serializer_class = AnalysisResultPostSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ['get', 'post', 'put', 'delete']
+    serializer_class = AnalysisResultCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        many = isinstance(data, list)  # array POST bo‘lsa
+        serializer = self.get_serializer(data=data, many=many)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(AnalysisResultPostSerializer(serializer.instance, many=many).data,
+                        status=status.HTTP_201_CREATED, headers=headers)
