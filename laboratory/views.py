@@ -3,8 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from laboratory.models import Analysis
-from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer
+from laboratory.models import Analysis, Result
+from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
+    ResultSerializer
 from user.views import PartialPutMixin
 from rest_framework.response import Response
 from django.db.models import Q
@@ -46,7 +47,8 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         return Response(data, status=status.HTTP_200_OK)
 
-    @extend_schema(methods=['POST'],request=AnalysisSearchInputSerializer,responses={200: AnalysisSerializer(many=True)},)
+    @extend_schema(methods=['POST'], request=AnalysisSearchInputSerializer,
+                   responses={200: AnalysisSerializer(many=True)}, )
     @action(detail=False, methods=['post'])
     def search(self, request):
         serializer = AnalysisSearchInputSerializer(data=request.data)
@@ -68,3 +70,11 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
+
+
+@extend_schema(tags=['Result'])
+class ResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'put', 'delete']

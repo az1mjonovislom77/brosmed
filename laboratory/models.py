@@ -13,7 +13,6 @@ class Analysis(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='patient')
     department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL,
                                          related_name='department_types')
-    analysis_result = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=100, choices=Status.choices, default=Status.new)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -28,3 +27,13 @@ class AnalysisFile(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class Result(models.Model):
+    analysis = models.ForeignKey(Analysis, null=True, blank=True, on_delete=models.SET_NULL, related_name='result')
+    title = models.CharField(null=True, blank=True, max_length=500)
+    analysis_result = models.CharField(max_length=100, null=True, blank=True)
+    norma = models.CharField(null=True, blank=True, max_length=500)
+
+    def __str__(self):
+        return self.title

@@ -5,7 +5,7 @@ from laboratory.models import Analysis, AnalysisFile
 
 @admin.register(Analysis)
 class AnalysisAdmin(admin.ModelAdmin):
-    list_display = ('id', 'patient', 'analysis_result', 'status')
+    list_display = ('id', 'patient', 'status')
 
 @admin.register(AnalysisFile)
 class AnalysisFileAdmin(admin.ModelAdmin):
