@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
 from reception.models import Patient
-from reception.serializers import PatientSerializer
+from reception.serializers import PatientSerializer, PatientPostSerializer
 from user.views import PartialPutMixin
 from datetime import timedelta
 
@@ -17,6 +17,11 @@ class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
     serializer_class = PatientSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return PatientPostSerializer
+        return super().get_serializer_class()
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
