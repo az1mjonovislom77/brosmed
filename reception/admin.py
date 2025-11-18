@@ -2,11 +2,15 @@ from django.contrib import admin
 
 from doctor.models import Consultations
 from laboratory.models import Analysis
-from reception.models import Patient
+from reception.models import Patient, AnalysisResult
 
 
 class ConsultationsInline(admin.TabularInline):
     model = Consultations
+    extra = 1
+
+class AnalysisResultInline(admin.TabularInline):
+    model = AnalysisResult
     extra = 1
 
 
@@ -18,4 +22,4 @@ class AnalysisInline(admin.TabularInline):
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'user')
-    inlines = [AnalysisInline, ConsultationsInline]
+    inlines = [AnalysisInline, ConsultationsInline, AnalysisResultInline]

@@ -1,6 +1,6 @@
 from django.db import models
 
-from department.models import Department, DepartmentTypes
+from department.models import Department, DepartmentTypes, Result
 from user.models import User
 
 
@@ -56,3 +56,12 @@ class Patient(models.Model):
 
     def __str__(self):
         return self.name + ' ' + self.last_name
+
+
+class AnalysisResult(models.Model):
+    result = models.ForeignKey(Result, null=True, blank=True, on_delete=models.SET_NULL, related_name='analysis_result')
+    patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
+    analysis_result = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.analysis_result

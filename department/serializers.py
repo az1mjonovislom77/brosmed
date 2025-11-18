@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from department.models import Department, DepartmentTypes, Result, AnalysisResult
+from department.models import Department, DepartmentTypes, Result
+from reception.models import AnalysisResult
 
 
 class AnalysisResultSerializer(serializers.ModelSerializer):
@@ -21,17 +22,17 @@ class AnalysisResultListSerializer(serializers.ListSerializer):
 class AnalysisResultCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnalysisResult
-        fields = ['result', 'analysis_result']
+        fields = ['result', 'patient', 'analysis_result']
 
 
 class AnalysisResultPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnalysisResult
-        fields = ['id', 'result', 'analysis_result']
+        fields = ['id', 'result', 'patient', 'analysis_result']
 
 
 class ResultSerializer(serializers.ModelSerializer):
-    analysis_result = AnalysisResultSerializer(many=True)
+    analysis_result = AnalysisResultSerializer(many=True, required=False)
 
     class Meta:
         model = Result

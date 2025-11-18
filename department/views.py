@@ -2,12 +2,11 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from department.models import Department, DepartmentTypes, Result, AnalysisResult
+from department.models import Department, DepartmentTypes, Result
 from department.serializers import DepartmentSerializer, DepartmentTypesSerializer, ResultSerializer, \
     AnalysisResultPostSerializer, AnalysisResultCreateSerializer
+from reception.models import AnalysisResult
 from user.views import PartialPutMixin
-from rest_framework.decorators import action
-from rest_framework.parsers import JSONParser
 
 
 @extend_schema(tags=['DepartmentTypes'])

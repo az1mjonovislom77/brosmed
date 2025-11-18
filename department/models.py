@@ -37,10 +37,3 @@ class Result(models.Model):
     def __str__(self):
         return self.title
 
-
-class AnalysisResult(models.Model):
-    result = models.ForeignKey(Result, null=True, blank=True, on_delete=models.SET_NULL, related_name='analysis_result')
-    analysis_result = models.CharField(max_length=100, null=True, blank=True)
-
-    def __str__(self):
-        return self.analysis_result
