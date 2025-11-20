@@ -1,8 +1,7 @@
 from django.contrib import admin
 
 from doctor.models import Consultations
-from laboratory.models import Analysis
-from reception.models import Patient, AnalysisResult
+from reception.models import Patient, AnalysisResult, Analysis
 
 
 class ConsultationsInline(admin.TabularInline):

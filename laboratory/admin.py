@@ -1,5 +1,6 @@
 from django.contrib import admin
-from laboratory.models import Analysis, AnalysisFile
+
+from reception.models import Analysis, AnalysisFile
 
 
 @admin.register(Analysis)

@@ -58,10 +58,36 @@ class Patient(models.Model):
         return self.name + ' ' + self.last_name
 
 
+class Analysis(models.Model):
+    class Status(models.TextChoices):
+        new = 'n', 'NEW'
+        in_progress = 'ip', 'IN_PROGRESS'
+        finished = 'f', 'FINISHED'
+
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='patient')
+    department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL,
+                                         related_name='department_types')
+    status = models.CharField(max_length=100, choices=Status.choices, default=Status.new)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class AnalysisFile(models.Model):
+    analysis = models.ForeignKey(Analysis, null=True, blank=True, on_delete=models.SET_NULL)
+    file = models.FileField(upload_to='analysis/', null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)
+
+
 class AnalysisResult(models.Model):
     result = models.ForeignKey(Result, null=True, blank=True, on_delete=models.SET_NULL, related_name='analysis_result')
     patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
     analysis_result = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.analysis_result

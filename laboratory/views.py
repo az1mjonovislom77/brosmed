@@ -1,13 +1,21 @@
+import json
+import os
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
-from laboratory.models import Analysis
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer
+from reception.models import Analysis
+from user.models import User
 from user.views import PartialPutMixin
 from rest_framework.response import Response
 from django.db.models import Q
+from django.conf import settings
+from .utils import create_analysis_docx
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, FileResponse
+from django.utils import timezone
+from reception.models import Patient, AnalysisResult
 
 
 @extend_schema(tags=['Analysis'])
@@ -69,3 +77,95 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
+
+
+@csrf_exempt
+def export_analysis_by_phone(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed"}, status=405)
+
+    try:
+        body = json.loads(request.body)
+    except:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    phone = body.get('phone')
+    if not phone:
+        return JsonResponse({"error": "phone required"}, status=400)
+
+    patient = Patient.objects.filter(phone_number=phone).first()
+    if not patient:
+        return JsonResponse({"error": "Patient not found"}, status=404)
+
+    results_qs = AnalysisResult.objects.filter(patient=patient) \
+        .select_related('result') \
+        .order_by('-created_at')
+
+    results_list = []
+    seen_titles = set()
+
+    for ar in results_qs:
+        if ar.result:
+            title = str(ar.result).strip()
+            norma = getattr(ar.result, 'norma', '') or ''
+        else:
+            title = f"[Noma'lum {ar.id}]"
+            norma = ''
+
+        value = ar.analysis_result or ''
+
+        if title and title not in seen_titles:
+            results_list.append({
+                'title': title,
+                'value': value,
+                'norma': norma
+            })
+            seen_titles.add(title)
+
+    if not results_list:
+        results_list = [
+            {'title': '', 'value': '', 'norma': ''},
+            {'title': '', 'value': '', 'norma': ''},
+        ]
+
+    analysis_title = "Анализ"
+    if patient.department_types and patient.department_types.title:
+        analysis_title = patient.department_types.title.strip()
+
+    doctor_name = "Laborant"
+
+    if patient.department_types and patient.department_types.department:
+        dept = patient.department_types.department
+
+        staff = User.objects.filter(department=dept, role__in=['l', 'd'], is_active=True, full_name__isnull=False,
+                                    full_name__gt='').first()
+
+        if staff:
+            doctor_name = staff.full_name.strip()
+        else:
+            doctor_name = f"{dept.title}" if dept.title else "Laborant"
+    elif patient.department_types:
+        doctor_name = f"{patient.department_types.title}"
+    print(f"[DOCX] Sarlavha: {analysis_title} | Doktor: {doctor_name}")
+
+    class DummyAnalysis:
+        id = 0
+        created_at = timezone.now()
+
+    analysis_obj = DummyAnalysis()
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
+    out_name = f"analysis_{patient.id}_{timestamp}.docx"
+    out_path = os.path.join(getattr(settings, 'MEDIA_ROOT', '/tmp'), out_name)
+    header_image_path = "/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png"
+
+    create_analysis_docx(
+        patient=patient,
+        analysis=analysis_obj,
+        results_list=results_list,
+        output_path=out_path,
+        header_image_path=header_image_path,
+        analysis_title=analysis_title,
+        doctor_name=doctor_name
+    )
+
+    return FileResponse(open(out_path, 'rb'), as_attachment=True, filename=out_name)

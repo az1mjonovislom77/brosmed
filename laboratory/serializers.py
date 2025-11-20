@@ -1,8 +1,7 @@
 from rest_framework import serializers
 
 from department.serializers import DepartmentTypesSerializer
-from laboratory.models import Analysis, AnalysisFile
-from reception.models import Patient
+from reception.models import Patient, AnalysisFile, Analysis
 
 
 class AnalysisFileSerializer(serializers.ModelSerializer):

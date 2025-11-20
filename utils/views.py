@@ -5,8 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from department.models import Department
 from doctor.models import Consultations
-from laboratory.models import Analysis
-from reception.models import Patient
+from reception.models import Patient, Analysis
 from user.views import PartialPutMixin
 from utils.models import ClinicAbout
 from utils.serializers import ClinicAboutSerializer, ClinicStatsInputSerializer, ClinicStatsResponseSerializer

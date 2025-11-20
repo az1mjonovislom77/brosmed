@@ -5,6 +5,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from django.conf import settings
 
+from laboratory.views import export_analysis_by_phone
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('user.urls')),
@@ -14,7 +16,7 @@ urlpatterns = [
     path('reception/', include('reception.urls')),
     path('laboratory/', include('laboratory.urls')),
     path('cashier/', include('cashier.urls')),
-
+    path('export-by-phone/', export_analysis_by_phone, name='export_analysis_by_phone'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
