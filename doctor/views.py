@@ -2,8 +2,10 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+
 from doctor.models import Consultations
-from doctor.serializers import ConsultationsSerializer
+from doctor.serializers import ConsultationsSerializer, ConsultationDetailInputSerializer
 from reception.models import Patient
 from user.models import User
 from user.serializers import UserCreateSerializer
@@ -41,7 +43,7 @@ class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
                                                 user=request.user).count()
         sogaygan = Patient.objects.filter(user=request.user, patient_status=Patient.PatientStatus.recovered).count()
 
-        shifokorlar = User.objects.filter(role = User.UserRoles.DOCTOR).count()
+        shifokorlar = User.objects.filter(role=User.UserRoles.DOCTOR).count()
 
         oxirgi_konsultatsiyalar = Consultations.objects.filter(user=request.user).order_by('-created_at')[:10]
 
@@ -58,3 +60,24 @@ class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=['Consultations'])
+class PatientConsultationsAPI(APIView):
+    serializer_class = ConsultationDetailInputSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ConsultationDetailInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        patient_id = serializer.validated_data['patient_id']
+
+        try:
+            patient = Patient.objects.get(id=patient_id)
+        except Patient.DoesNotExist:
+            return Response({"error": "Patient topilmadi"}, status=404)
+
+        consultations = Consultations.objects.filter(patient=patient).order_by('-created_at')
+        output = ConsultationsSerializer(consultations, many=True, context={"request": request})
+
+        return Response(output.data, status=200)
