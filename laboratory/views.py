@@ -5,10 +5,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
-    AnalysisFullDetailSerializer, AnalysisDetailInputSerializer, AnalysisByPatientInputSerializer, \
-    AnalysisNestSerializer
+    AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
 from reception.models import Analysis
 from user.models import User
 from user.views import PartialPutMixin
@@ -132,7 +130,7 @@ def export_analysis_by_phone(request):
             {'title': '', 'value': '', 'norma': ''},
         ]
 
-    analysis_title = "Анализ"
+    analysis_title = "Analiz"
     if patient.department_types and patient.department_types.title:
         analysis_title = patient.department_types.title.strip()
 

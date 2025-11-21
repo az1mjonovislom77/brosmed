@@ -17,7 +17,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
         try:
             p = doc.add_paragraph()
             r = p.add_run()
-            r.add_picture(header_image_path, width=Inches(5.5))  # adjust size as needed
+            r.add_picture(header_image_path, width=Inches(5.5))
             p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
             doc.add_paragraph()  # space
         except Exception:
@@ -28,7 +28,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     title_run.bold = True
     title_run.font.size = Pt(14)
     title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title}\n")
     subtitle_run.italic = True

@@ -25,3 +25,8 @@ class PatientPostSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'department', 'department_types', 'name', 'last_name', 'middle_name', 'gender',
                   'birth_date', 'phone_number', 'address', 'disease', 'disease_uz', 'disease_ru', 'payment_status',
                   'patient_status', 'created_at']
+
+
+class ExportAnalysisSerializer(serializers.Serializer):
+    patient_id = serializers.IntegerField(required=True, help_text="Patient ID")
+    analysis_id = serializers.IntegerField(required=True, help_text="Analysis ID")
