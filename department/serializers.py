@@ -7,7 +7,7 @@ from reception.models import AnalysisResult
 class AnalysisResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnalysisResult
-        fields = ['id', 'patient', 'analysis_result']
+        fields = ['id', 'patient', 'analysis_result', 'created_at']
 
 
 class AnalysisResultListSerializer(serializers.ListSerializer):

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from department.serializers import DepartmentTypesSerializer, DepartmentTypesNestSerializer
+from department.models import Result
+from department.serializers import DepartmentTypesSerializer, DepartmentTypesNestSerializer, ResultSerializer
 from reception.models import Patient, AnalysisFile, Analysis, AnalysisResult
 
 
@@ -23,7 +24,7 @@ class PatientNestSerializer(serializers.ModelSerializer):
         model = Patient
         fields = ['id', 'user', 'name', 'last_name', 'middle_name', 'gender',
                   'birth_date', 'payment_status',
-                  'patient_status', 'created_at']
+                  'patient_status']
 
 
 class AnalysisSerializer(serializers.ModelSerializer):
@@ -114,12 +115,23 @@ class AnalysisFullDetailSerializer(serializers.ModelSerializer):
             'department_types',
             'status',
             'files',
-            'results'
+            'results',
+            'created_at'
         ]
 
     def get_results(self, obj):
-        results = AnalysisResult.objects.filter(patient=obj.patient)
-        return AnalysisResultNestedSerializer(results, many=True).data
+        results = Result.objects.filter(department_types=obj.department_types)
+        serialized_results = []
+        for result in results:
+            analysis_results = result.analysis_result.filter(patient=obj.patient)
+            result_serializer = ResultSerializer(result, context=self.context)
+            data = result_serializer.data
+            data['analysis_result'] = AnalysisResultNestedSerializer(analysis_results, many=True, context=self.context).data
+            serialized_results.append(data)
+
+        return serialized_results
+
+
 
 class AnalysisDetailInputSerializer(serializers.Serializer):
     patient_id = serializers.IntegerField(required=True)
