@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from department.serializers import DepartmentTypesSerializer
+from department.serializers import DepartmentTypesSerializer, DepartmentTypesNestSerializer
 from reception.models import Patient, AnalysisFile, Analysis
 
 
@@ -70,7 +70,7 @@ class AnalysisPostSerializer(serializers.ModelSerializer):
 
 class AnalysisNestSerializer(serializers.ModelSerializer):
     files = AnalysisFileSerializer(many=True, required=False, source='analysisfile_set')
-    department_types = DepartmentTypesSerializer(read_only=True)
+    department_types = DepartmentTypesNestSerializer(read_only=True)
 
     class Meta:
         model = Analysis
