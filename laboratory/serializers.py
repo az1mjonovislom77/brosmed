@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from department.serializers import DepartmentTypesSerializer, DepartmentTypesNestSerializer
-from reception.models import Patient, AnalysisFile, Analysis
+from reception.models import Patient, AnalysisFile, Analysis, AnalysisResult
 
 
 class AnalysisFileSerializer(serializers.ModelSerializer):
@@ -90,3 +90,37 @@ class AnalysisNestSerializer(serializers.ModelSerializer):
 
 class AnalysisSearchInputSerializer(serializers.Serializer):
     search = serializers.CharField(required=True)
+
+
+class AnalysisResultNestedSerializer(serializers.ModelSerializer):
+    result_name = serializers.CharField(source='result.name', read_only=True)
+
+    class Meta:
+        model = AnalysisResult
+        fields = ['id', 'result_name', 'analysis_result']
+
+
+class AnalysisFullDetailSerializer(serializers.ModelSerializer):
+    files = AnalysisFileSerializer(many=True, source='analysisfile_set')
+    patient = PatientNestSerializer(read_only=True)
+    department_types = DepartmentTypesNestSerializer(read_only=True)
+    results = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Analysis
+        fields = [
+            'id',
+            'patient',
+            'department_types',
+            'status',
+            'files',
+            'results'
+        ]
+
+    def get_results(self, obj):
+        results = AnalysisResult.objects.filter(patient=obj.patient)
+        return AnalysisResultNestedSerializer(results, many=True).data
+
+class AnalysisDetailInputSerializer(serializers.Serializer):
+    patient_id = serializers.IntegerField(required=True)
+    analysis_id = serializers.IntegerField(required=True)

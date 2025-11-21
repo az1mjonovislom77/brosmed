@@ -4,7 +4,10 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer
+from rest_framework.views import APIView
+
+from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
+    AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
 from reception.models import Analysis
 from user.models import User
 from user.views import PartialPutMixin
@@ -169,3 +172,29 @@ def export_analysis_by_phone(request):
     )
 
     return FileResponse(open(out_path, 'rb'), as_attachment=True, filename=out_name)
+
+
+@extend_schema(tags=['Analysis'])
+class AnalysisDetailByPatient(APIView):
+
+    serializer_class = AnalysisDetailInputSerializer
+
+    def post(self, request):
+        serializer = AnalysisDetailInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        patient_id = serializer.validated_data['patient_id']
+        analysis_id = serializer.validated_data['analysis_id']
+
+        try:
+            patient = Patient.objects.get(id=patient_id)
+        except Patient.DoesNotExist:
+            return Response({"error": "Patient topilmadi"}, status=404)
+
+        try:
+            analysis = Analysis.objects.get(id=analysis_id, patient=patient)
+        except Analysis.DoesNotExist:
+            return Response({"error": "Analysis topilmadi yoki bu patientga tegishli emas"}, status=404)
+
+        output = AnalysisFullDetailSerializer(analysis, context={"request": request})
+        return Response(output.data, status=200)
