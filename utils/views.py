@@ -14,6 +14,7 @@ from openpyxl import Workbook
 from reportlab.pdfgen import canvas
 from io import BytesIO
 from django.http import HttpResponse
+from datetime import date, timedelta
 
 
 @extend_schema(tags=['ClinicAbout'])
@@ -129,6 +130,66 @@ class ClinicStatsExportMixin:
             "umumiy": umumiy_data,
             "departments": departments_data
         }
+
+
+@extend_schema(tags=['Report'])
+class ClinicLastWeekAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        end_date = date.today()
+        start_date = end_date - timedelta(days=7)
+
+        umumiy_tolov = Patient.objects.filter(
+            payment_status=Patient.PaymentStatus.confirmed,
+            updated_at__date__range=(start_date, end_date)
+        ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
+
+        umumiy_data = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "jami_bemorlar": Patient.objects.filter(
+                created_at__date__range=(start_date, end_date)
+            ).count(),
+            "konsultatsiyalar": Consultations.objects.filter(
+                created_at__date__range=(start_date, end_date)
+            ).count(),
+            "tahlillar": Analysis.objects.filter(
+                created_at__date__range=(start_date, end_date)
+            ).count(),
+            "tolovlar": umumiy_tolov,
+        }
+
+        departments_data = []
+
+        for dep in Department.objects.all():
+            dep_patients = Patient.objects.filter(
+                department=dep,
+                created_at__date__range=(start_date, end_date)
+            )
+
+            dep_tolov = dep_patients.filter(
+                payment_status=Patient.PaymentStatus.confirmed
+            ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
+
+            departments_data.append({
+                "department": dep.title,
+                "jami_bemorlar": dep_patients.count(),
+                "konsultatsiyalar": Consultations.objects.filter(
+                    patient__department=dep,
+                    created_at__date__range=(start_date, end_date)
+                ).count(),
+                "tahlillar": Analysis.objects.filter(
+                    patient__department=dep,
+                    created_at__date__range=(start_date, end_date)
+                ).count(),
+                "tolovlar": dep_tolov
+            })
+
+        return Response({
+            "umumiy": umumiy_data,
+            "departments": departments_data
+        })
 
 
 @extend_schema(tags=['Report'], request=ClinicStatsInputSerializer, responses={200: None})
