@@ -41,6 +41,8 @@ class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
                                                 user=request.user).count()
         sogaygan = Patient.objects.filter(user=request.user, patient_status=Patient.PatientStatus.recovered).count()
 
+        shifokorlar = User.objects.filter(role = User.UserRoles.DOCTOR).count()
+
         oxirgi_konsultatsiyalar = Consultations.objects.filter(user=request.user).order_by('-created_at')[:10]
 
         data = {
@@ -49,6 +51,7 @@ class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
             "kutayotgan": kutayotgan,
             "davolanayotgan": davolanayotgan,
             "sogaygan": sogaygan,
+            "shifokorlar": shifokorlar,
             'oxirgi_konsultatsiyalar': (
                 ConsultationsSerializer(oxirgi_konsultatsiyalar, many=True, context={'request': request}).data if
                 oxirgi_konsultatsiyalar else None)
