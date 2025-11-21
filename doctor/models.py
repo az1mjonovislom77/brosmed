@@ -1,7 +1,6 @@
 from django.db import models
-
-from reception.models import Patient
 from user.models import User
+from reception.models import Patient
 
 
 class Consultations(models.Model):
