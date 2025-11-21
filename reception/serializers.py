@@ -12,12 +12,16 @@ class PatientSerializer(serializers.ModelSerializer):
     analysis = AnalysisNestSerializer(read_only=True, many=True, source='patient')
     user = UserCreateSerializer(read_only=True)
     department_types = DepartmentTypesNestSerializer(read_only=True)
+    results = serializers.SerializerMethodField()
 
     class Meta:
         model = Patient
         fields = ['id', 'user', 'department', 'department_types', 'name', 'last_name', 'middle_name', 'gender',
                   'birth_date', 'phone_number', 'address', 'disease', 'disease_uz', 'disease_ru', 'payment_status',
-                  'patient_status', 'created_at', 'consultations', 'analysis']
+                  'patient_status', 'created_at', 'consultations', 'analysis', 'results']
+
+    def get_results(self, obj):
+        return obj.analysis.values_list("id", flat=True)
 
 
 class PatientPostSerializer(serializers.ModelSerializer):

@@ -73,7 +73,7 @@ class DepartmentTypesNestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DepartmentTypes
-        fields = ['id', 'department', 'title', 'title_uz', 'title_ru', 'price', 'result']
+        fields = ['id', 'department', 'title', 'title_uz', 'title_ru', 'price']
 
 
 
