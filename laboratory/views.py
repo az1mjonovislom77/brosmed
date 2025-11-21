@@ -7,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
-    AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
+    AnalysisFullDetailSerializer, AnalysisDetailInputSerializer, AnalysisByPatientInputSerializer, \
+    AnalysisNestSerializer
 from reception.models import Analysis
 from user.models import User
 from user.views import PartialPutMixin
@@ -176,7 +177,6 @@ def export_analysis_by_phone(request):
 
 @extend_schema(tags=['Analysis'])
 class AnalysisDetailByPatient(APIView):
-
     serializer_class = AnalysisDetailInputSerializer
 
     def post(self, request):

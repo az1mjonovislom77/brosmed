@@ -126,13 +126,17 @@ class AnalysisFullDetailSerializer(serializers.ModelSerializer):
             analysis_results = result.analysis_result.filter(patient=obj.patient)
             result_serializer = ResultSerializer(result, context=self.context)
             data = result_serializer.data
-            data['analysis_result'] = AnalysisResultNestedSerializer(analysis_results, many=True, context=self.context).data
+            data['analysis_result'] = AnalysisResultNestedSerializer(analysis_results, many=True,
+                                                                     context=self.context).data
             serialized_results.append(data)
 
         return serialized_results
 
 
-
 class AnalysisDetailInputSerializer(serializers.Serializer):
     patient_id = serializers.IntegerField(required=True)
     analysis_id = serializers.IntegerField(required=True)
+
+
+class AnalysisByPatientInputSerializer(serializers.Serializer):
+    patient_id = serializers.IntegerField(required=True)

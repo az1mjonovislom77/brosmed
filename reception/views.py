@@ -5,7 +5,9 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
-from reception.models import Patient
+from rest_framework.views import APIView
+from laboratory.serializers import AnalysisByPatientInputSerializer, AnalysisNestSerializer
+from reception.models import Patient, Analysis
 from reception.serializers import PatientSerializer, PatientPostSerializer
 from user.views import PartialPutMixin
 from datetime import timedelta
@@ -56,3 +58,23 @@ class PatientDoctorAPIView(ListAPIView):
     def get_queryset(self):
         return Patient.objects.filter(user=self.request.user).exclude(
             patient_status=Patient.PatientStatus.finished).order_by('-created_at')
+
+
+@extend_schema(tags=['Patient'])
+class PatientAnalysisAPIView(APIView):
+    serializer_class = AnalysisByPatientInputSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = AnalysisByPatientInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        patient_id = serializer.validated_data['patient_id']
+
+        try:
+            patient = Patient.objects.get(id=patient_id)
+        except Patient.DoesNotExist:
+            return Response({"error": "Patient not found"}, status=404)
+
+        analyses = Analysis.objects.filter(patient=patient)
+        output = AnalysisNestSerializer(analyses, many=True, context={"request": request})
+        return Response(output.data)

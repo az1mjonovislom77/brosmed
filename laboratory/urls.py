@@ -8,6 +8,6 @@ router.register('analysis', AnalysisViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('analysis/user', AnalysisDetailByPatient.as_view(), name='analysis-user'),
+    path('patient/result', AnalysisDetailByPatient.as_view(), name='analysis-result'),
 
 ]
