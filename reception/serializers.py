@@ -3,13 +3,13 @@ from rest_framework import serializers
 from department.serializers import DepartmentTypesNestSerializer
 from doctor.serializers import ConsultationsSerializer
 from laboratory.serializers import AnalysisNestSerializer
-from reception.models import Patient
+from reception.models import Patient, AnalysisResult
 from user.serializers import UserCreateSerializer
 
 
 class PatientSerializer(serializers.ModelSerializer):
     consultations = ConsultationsSerializer(many=True, read_only=True)
-    analysis = AnalysisNestSerializer(read_only=True, many=True, source='patient')
+    analysis = AnalysisNestSerializer(read_only=True, many=True)
     user = UserCreateSerializer(read_only=True)
     department_types = DepartmentTypesNestSerializer(read_only=True)
     results = serializers.SerializerMethodField()
@@ -21,7 +21,7 @@ class PatientSerializer(serializers.ModelSerializer):
                   'patient_status', 'created_at', 'consultations', 'analysis', 'results']
 
     def get_results(self, obj):
-        return obj.analysis.values_list("id", flat=True)
+        return AnalysisResult.objects.filter(patient=obj).values_list("id", flat=True)
 
 
 class PatientPostSerializer(serializers.ModelSerializer):
