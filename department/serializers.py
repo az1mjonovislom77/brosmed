@@ -28,7 +28,7 @@ class AnalysisResultCreateSerializer(serializers.ModelSerializer):
 class AnalysisResultPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnalysisResult
-        fields = ['id', 'result', 'patient',  'analysis_result',  'created_at']
+        fields = ['id', 'result', 'patient', 'analysis_result', 'created_at']
 
 
 class ResultSerializer(serializers.ModelSerializer):
@@ -67,6 +67,14 @@ class DepartmentTypesSerializer(serializers.ModelSerializer):
             for ar in analysis_result_data: AnalysisResult.objects.create(result=result_obj, **ar)
 
         return department_type
+
+
+class DepartmentTypesNestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DepartmentTypes
+        fields = ['id', 'department', 'title', 'title_uz', 'title_ru', 'price']
+
 
 
 class DepartmentSerializer(serializers.ModelSerializer):

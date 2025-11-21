@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from department.serializers import DepartmentTypesSerializer
+from department.serializers import DepartmentTypesNestSerializer
 from doctor.serializers import ConsultationsSerializer
 from laboratory.serializers import AnalysisNestSerializer
 from reception.models import Patient
@@ -11,7 +11,7 @@ class PatientSerializer(serializers.ModelSerializer):
     consultations = ConsultationsSerializer(many=True, read_only=True)
     analysis = AnalysisNestSerializer(read_only=True, many=True, source='patient')
     user = UserCreateSerializer(read_only=True)
-    department_types = DepartmentTypesSerializer(read_only=True)
+    department_types = DepartmentTypesNestSerializer(read_only=True)
 
     class Meta:
         model = Patient
