@@ -9,8 +9,10 @@ from django.conf import settings
 from laboratory.utils import create_analysis_docx
 from .models import Patient, AnalysisResult, Analysis, User
 from .serializers import ExportAnalysisSerializer
+from drf_spectacular.utils import extend_schema
 
 
+@extend_schema(tags=['Export'])
 class ExportAnalysisByPatientView(APIView):
     serializer_class = ExportAnalysisSerializer
 
