@@ -7,10 +7,12 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from laboratory.serializers import AnalysisByPatientInputSerializer, AnalysisNestSerializer
-from reception.models import Patient, Analysis
-from reception.serializers import PatientSerializer, PatientPostSerializer
+from reception.models import Patient, Analysis, Disease
+from reception.serializers import PatientSerializer, PatientPostSerializer, PatientSearchInputSerializer, \
+    DiseaseSerializer, DiseaseGetSerializers
 from user.views import PartialPutMixin
 from datetime import timedelta
+from django.db.models import Q
 
 
 @extend_schema(tags=['Patient'])
@@ -51,13 +53,21 @@ class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
 
 @extend_schema(tags=['Patient'])
-class PatientDoctorAPIView(ListAPIView):
-    serializer_class = PatientSerializer
+class PatientDoctorAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Patient.objects.filter(user=self.request.user).exclude(
+    def get(self, request):
+        patients = Patient.objects.filter(user=request.user).exclude(
             patient_status=Patient.PatientStatus.finished).order_by('-created_at')
+
+        diseases = Disease.objects.filter(user=request.user).order_by('-id')
+        patient_data = PatientSerializer(patients, many=True).data
+        disease_data = DiseaseSerializer(diseases, many=True).data
+
+        return Response({
+            "patients": patient_data,
+            "diseases": disease_data
+        })
 
 
 @extend_schema(tags=['Patient'])
@@ -78,3 +88,44 @@ class PatientAnalysisAPIView(APIView):
         analyses = Analysis.objects.filter(patient=patient)
         output = AnalysisNestSerializer(analyses, many=True, context={"request": request})
         return Response(output.data)
+
+
+@extend_schema(tags=['Patient'], request=PatientSearchInputSerializer, responses=PatientSerializer(many=True))
+class PatientSearchAPIView(APIView):
+    serializers_class = PatientSearchInputSerializer
+
+    def post(self, request):
+        search = request.data.get("search", "")
+
+        queryset = Patient.objects.filter(
+            Q(name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(middle_name__icontains=search)
+            | Q(phone_number__icontains=search)
+            | Q(passport__icontains=search)
+            | Q(address__icontains=search)
+        ).distinct()
+
+        return Response(PatientSerializer(queryset, many=True).data)
+
+
+@extend_schema(tags=['Disease'])
+class DiseaseViewSet(viewsets.ModelViewSet, PartialPutMixin):
+    queryset = Disease.objects.all()
+    serializer_class = DiseaseSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'put', 'delete']
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return DiseaseGetSerializers
+        return super().get_serializer_class()
+
+
+@extend_schema(tags=['Disease'], request=None, responses=DiseaseSerializer(many=True))
+class PatientDiseasesAPIView(APIView):
+
+    def get(self, request, patient_id):
+        queryset = Disease.objects.filter(patient_id=patient_id)
+        serializer = DiseaseSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

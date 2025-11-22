@@ -10,8 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 class PatientMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        fields = ['id', 'name', 'last_name', 'middle_name', 'gender', 'birth_date', 'phone_number', 'address',
-                  'disease', 'payment_status', 'patient_status']
+        fields = ['id', 'name', 'last_name', 'middle_name', 'gender', 'birth_date', 'phone_number', 'passport',
+                  'address', 'payment_status', 'patient_status']
         read_only_fields = fields
 
 

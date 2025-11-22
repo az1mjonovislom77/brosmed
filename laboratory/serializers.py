@@ -22,7 +22,7 @@ class AnalysisFileSerializer(serializers.ModelSerializer):
 class PatientNestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        fields = ['id', 'user', 'name', 'last_name', 'middle_name', 'gender',
+        fields = ['id', 'user', 'name', 'last_name', 'middle_name', 'passport', 'gender',
                   'birth_date', 'payment_status',
                   'patient_status']
 

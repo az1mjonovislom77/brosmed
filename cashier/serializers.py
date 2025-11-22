@@ -8,10 +8,10 @@ class CashierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ['id', 'user', 'department', 'department_types', 'patient_id', 'name', 'last_name', 'middle_name',
-                  'gender', 'birth_date', 'phone_number', 'address', 'disease',
+                  'gender', 'birth_date', 'phone_number', 'address',
                   'payment_status', 'total_amount', 'paid_amount', 'partial_payment_amount', 'created_at']
         read_only_fields = ['id', 'user', 'department', 'name', 'last_name', 'middle_name', 'gender',
-                            'birth_date', 'phone_number', 'address', 'disease', 'total_amount', 'paid_amount',
+                            'birth_date', 'phone_number', 'address', 'total_amount', 'paid_amount',
                             'department_types', 'created_at']
 
     def update(self, instance, validated_data):

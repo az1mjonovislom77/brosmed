@@ -31,8 +31,8 @@ class Patient(models.Model):
     gender = models.CharField(max_length=100, choices=GenderChoice.choices, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=100, null=True, blank=True)
+    passport = models.CharField(max_length=100, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
-    disease = models.TextField(null=True, blank=True)
     payment_status = models.CharField(max_length=100, choices=PaymentStatus.choices, default=PaymentStatus.pending)
     patient_status = models.CharField(max_length=100, choices=PatientStatus.choices, default=PatientStatus.in_register)
     partial_payment_amount = models.FloatField(default=0)
@@ -56,6 +56,24 @@ class Patient(models.Model):
 
     def __str__(self):
         return self.name + ' ' + self.last_name
+
+
+class Disease(models.Model):
+    patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
+    department = models.ForeignKey(Department, null=True, blank=True, on_delete=models.SET_NULL)
+    department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    disease = models.TextField(max_length=100, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.patient:
+            self.patient.patient_status = Patient.PatientStatus.in_register
+            self.patient.save()
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.id)
 
 
 class Analysis(models.Model):
