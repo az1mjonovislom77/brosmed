@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
-
 from department.serializers import DepartmentTypesNestSerializer
-from reception.models import Patient, AnalysisResult, Disease
+from reception.models import Patient, Disease
 from user.serializers import UserCreateSerializer
 
 
@@ -19,8 +17,8 @@ class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ['id', 'user', 'department', 'department_types', 'name', 'last_name', 'middle_name', 'gender',
-                  'birth_date', 'phone_number', 'passport', 'address', 'payment_status', 'patient_status',
-                  'created_at']
+                  'birth_date', 'phone_number', 'passport', 'address', 'self_disease', 'payment_status',
+                  'patient_status', 'created_at']
 
     def get_disease(self, obj):
         return Disease.objects.filter(patient=obj).values_list("id", flat=True)
@@ -30,8 +28,8 @@ class PatientPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
         fields = ['id', 'user', 'department', 'department_types', 'name', 'last_name', 'middle_name', 'gender',
-                  'birth_date', 'phone_number', 'passport', 'address', 'payment_status', 'patient_status',
-                  'created_at']
+                  'birth_date', 'phone_number', 'passport', 'self_disease', 'address', 'payment_status',
+                  'patient_status', 'created_at']
 
 
 class DiseaseGetSerializers(serializers.ModelSerializer):

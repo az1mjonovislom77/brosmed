@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from department.models import Result
 from department.serializers import DepartmentTypesSerializer, DepartmentTypesNestSerializer, ResultSerializer
 from reception.models import Patient, AnalysisFile, Analysis, AnalysisResult
@@ -22,9 +21,8 @@ class AnalysisFileSerializer(serializers.ModelSerializer):
 class PatientNestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        fields = ['id', 'user', 'name', 'last_name', 'middle_name', 'passport', 'gender',
-                  'birth_date', 'payment_status',
-                  'patient_status']
+        fields = ['id', 'user', 'name', 'last_name', 'middle_name', 'passport', 'self_disease', 'gender',
+                  'birth_date', 'payment_status', 'patient_status']
 
 
 class AnalysisSerializer(serializers.ModelSerializer):

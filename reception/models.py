@@ -31,6 +31,7 @@ class Patient(models.Model):
     gender = models.CharField(max_length=100, choices=GenderChoice.choices, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     phone_number = models.CharField(max_length=100, null=True, blank=True)
+    self_disease = models.TextField(max_length=100, null=True, blank=True)
     passport = models.CharField(max_length=100, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     payment_status = models.CharField(max_length=100, choices=PaymentStatus.choices, default=PaymentStatus.pending)
