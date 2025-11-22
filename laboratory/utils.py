@@ -7,7 +7,7 @@ from docx.oxml.ns import qn
 
 def create_analysis_docx(patient, analysis, results_list, output_path,
                          header_image_path="/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png",
-                         analysis_title="Анализ", doctor_name=""):
+                         analysis_title="Analiz", doctor_name=""):
     doc = Document()
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'

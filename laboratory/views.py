@@ -1,21 +1,24 @@
 import json
 import os
+import re
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from bot import normalize_phone
+from department.models import Department
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
     AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
+from laboratory.utils import create_analysis_docx
 from reception.models import Analysis
 from user.models import User
 from user.views import PartialPutMixin
 from rest_framework.response import Response
 from django.db.models import Q
 from django.conf import settings
-from .utils import create_analysis_docx
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse
 from django.utils import timezone
 from reception.models import Patient, AnalysisResult
 
@@ -82,95 +85,171 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
 
 @csrf_exempt
-def export_analysis_by_phone(request):
+def check_patient(request):
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST allowed"}, status=405)
+        return JsonResponse({"error": "POST only"}, status=405)
 
     try:
         body = json.loads(request.body)
+        raw_phone = body.get("phone", "").strip()
     except:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    phone = body.get('phone')
+    phone = normalize_phone(raw_phone)
     if not phone:
-        return JsonResponse({"error": "phone required"}, status=400)
+        return JsonResponse({"error": "Invalid phone"}, status=400)
 
     patient = Patient.objects.filter(phone_number=phone).first()
+
+    if not patient:
+        for p in Patient.objects.all():
+            if normalize_phone(p.phone_number) == phone:
+                patient = p
+                break
+
     if not patient:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
-    results_qs = AnalysisResult.objects.filter(patient=patient) \
-        .select_related('result') \
-        .order_by('-created_at')
+    dept_types = []
+    departments = Department.objects.filter(patient=patient)
+    seen = set()
+    for dept in departments:
+        for dt in dept.department_types.all():
+            if dt.id not in seen:
+                dept_types.append({
+                    "id": dt.id,
+                    "title": dt.title
+                })
+                seen.add(dt.id)
 
-    results_list = []
-    seen_titles = set()
+    if not dept_types:
+        dept_types = [{"id": 1, "title": "Umumiy tahlil"}]
 
-    for ar in results_qs:
-        if ar.result:
-            title = str(ar.result).strip()
-            norma = getattr(ar.result, 'norma', '') or ''
-        else:
-            title = f"[Noma'lum {ar.id}]"
-            norma = ''
+    return JsonResponse({
+        "found": True,
+        "department_types": dept_types
+    })
 
-        value = ar.analysis_result or ''
 
-        if title and title not in seen_titles:
-            results_list.append({
-                'title': title,
-                'value': value,
-                'norma': norma
-            })
+@csrf_exempt
+def export_analysis_by_phone(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST"}, status=405)
+
+    try:
+        body = json.loads(request.body)
+        raw_phone = body.get("phone", "").strip()
+        department_type_id = body.get("department_type_id")
+    except:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    phone = normalize_phone(raw_phone)
+    if not phone:
+        return JsonResponse({"error": "Invalid phone"}, status=400)
+
+    patient = Patient.objects.filter(phone_number=phone).first()
+    if not patient:
+        for p in Patient.objects.all():
+            if normalize_phone(p.phone_number) == phone:
+                patient = p
+                break
+    if not patient:
+        return JsonResponse({"error": "Patient not found"}, status=404)
+
+    analyses_qs = Analysis.objects.filter(patient=patient)
+    if department_type_id and str(department_type_id).isdigit():
+        analyses_qs = analyses_qs.filter(department_types_id=int(department_type_id))
+
+    analyses_qs = analyses_qs.order_by('-created_at')
+    if not analyses_qs.exists():
+        return JsonResponse({"error": "No analysis found"}, status=404)
+
+    export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
+    os.makedirs(export_dir, exist_ok=True)
+
+    header_image_path = os.path.join(settings.STATIC_ROOT or "", "images", "header.png")
+    if not os.path.exists(header_image_path):
+        header_image_path = None
+
+    files_created = []
+
+    for analysis in analyses_qs:
+        dept_name = "Umumiy"
+        if analysis.department_types and analysis.department_types.title:
+            dept_name = analysis.department_types.title.strip()
+
+        created_at = analysis.created_at
+        date_str = created_at.strftime("%d.%m.%Y")
+        time_str = created_at.strftime("%H-%M")
+
+        safe_dept = re.sub(r'[<>:"/\\|?*]', '_', dept_name)[:40]
+        filename = f"{safe_dept}_{date_str}_{time_str}.docx"
+        filepath = os.path.join(export_dir, filename)
+
+        results_list = []
+        seen_titles = set()
+        time_window = timezone.timedelta(hours=2)
+        start_time = created_at - time_window
+        end_time = created_at + time_window
+
+        candidate_results = AnalysisResult.objects.filter(
+            patient=patient,
+            created_at__gte=start_time,
+            created_at__lte=end_time
+        ).select_related('result').order_by('created_at')
+
+        for ar in candidate_results:
+            if not ar.result or not ar.result.title:
+                continue
+            title = ar.result.title.strip()
+            if title in seen_titles:
+                continue
             seen_titles.add(title)
 
-    if not results_list:
-        results_list = [
-            {'title': '', 'value': '', 'norma': ''},
-            {'title': '', 'value': '', 'norma': ''},
-        ]
+            results_list.append({
+                'title': title,
+                'value': ar.analysis_result or '-',
+                'norma': ar.result.norma or '-'
+            })
 
-    analysis_title = "Analiz"
-    if patient.department_types and patient.department_types.title:
-        analysis_title = patient.department_types.title.strip()
+        if not results_list:
+            results_list = [{'title': 'Natija hali kiritilmagan', 'value': '', 'norma': ''}]
 
-    doctor_name = "Laborant"
+        doctor_name = "Laborant"
 
-    if patient.department_types and patient.department_types.department:
-        dept = patient.department_types.department
+        if analysis.department_types:
+            departments = Department.objects.filter(department_types=analysis.department_types)
+            if departments.exists():
+                dept = departments.first()
+                staff = User.objects.filter(
+                    department=dept,
+                    role__in=['l', 'd'],
+                    is_active=True,
+                    full_name__isnull=False,
+                    full_name__gt=''
+                ).first()
+                if staff:
+                    doctor_name = staff.full_name.strip()
+                else:
+                    doctor_name = f"{dept.title}" if dept.title else "Laborant"
 
-        staff = User.objects.filter(department=dept, role__in=['l', 'd'], is_active=True, full_name__isnull=False,
-                                    full_name__gt='').first()
+        create_analysis_docx(
+            patient=patient,
+            analysis=analysis,
+            results_list=results_list,
+            output_path=filepath,
+            header_image_path=header_image_path,
+            analysis_title=f"{dept_name} natijasi",
+            doctor_name=doctor_name
+        )
 
-        if staff:
-            doctor_name = staff.full_name.strip()
-        else:
-            doctor_name = f"{dept.title}" if dept.title else "Laborant"
-    elif patient.department_types:
-        doctor_name = f"{patient.department_types.title}"
-    print(f"[DOCX] Sarlavha: {analysis_title} | Doktor: {doctor_name}")
+        file_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{filename}")
+        files_created.append({
+            "filename": filename,
+            "url": file_url
+        })
 
-    class DummyAnalysis:
-        id = 0
-        created_at = timezone.now()
-
-    analysis_obj = DummyAnalysis()
-    timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
-    out_name = f"analysis_{patient.id}_{timestamp}.docx"
-    out_path = os.path.join(getattr(settings, 'MEDIA_ROOT', '/tmp'), out_name)
-    header_image_path = "/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png"
-
-    create_analysis_docx(
-        patient=patient,
-        analysis=analysis_obj,
-        results_list=results_list,
-        output_path=out_path,
-        header_image_path=header_image_path,
-        analysis_title=analysis_title,
-        doctor_name=doctor_name
-    )
-
-    return FileResponse(open(out_path, 'rb'), as_attachment=True, filename=out_name)
+    return JsonResponse({"files": files_created})
 
 
 @extend_schema(tags=['Analysis'])
