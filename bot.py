@@ -9,8 +9,8 @@ import aiofiles
 
 BOT_TOKEN = "8311992216:AAFt3Bs5fxecz1GcEtO8MfuLDooZKMkD1_0"
 
-CHECK_PATIENT_URL = "http://127.0.0.1:8000/check-patient/"
-EXPORT_ANALYSIS_URL = "http://127.0.0.1:8000/export-by-phone/"
+CHECK_PATIENT_URL = "http://45.55.129.34/check-patient/"
+EXPORT_ANALYSIS_URL = "http://45.55.129.34/export-by-phone/"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
