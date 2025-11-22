@@ -140,56 +140,43 @@ class ClinicLastWeekAPIView(APIView):
         end_date = date.today()
         start_date = end_date - timedelta(days=7)
 
-        umumiy_tolov = Patient.objects.filter(
-            payment_status=Patient.PaymentStatus.confirmed,
-            updated_at__date__range=(start_date, end_date)
-        ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
+        results = []
 
-        umumiy_data = {
-            "start_date": start_date,
-            "end_date": end_date,
-            "jami_bemorlar": Patient.objects.filter(
-                created_at__date__range=(start_date, end_date)
-            ).count(),
-            "konsultatsiyalar": Consultations.objects.filter(
-                created_at__date__range=(start_date, end_date)
-            ).count(),
-            "tahlillar": Analysis.objects.filter(
-                created_at__date__range=(start_date, end_date)
-            ).count(),
-            "tolovlar": umumiy_tolov,
-        }
+        for i in range(7):
+            day = start_date + timedelta(days=i)
+            bemorlar = Patient.objects.filter(created_at__date=day).count()
+            konsultatsiyalar = Consultations.objects.filter(created_at__date=day).count()
+            tahlillar = Analysis.objects.filter(created_at__date=day).count()
+            tolovlar = Patient.objects.filter(payment_status=Patient.PaymentStatus.confirmed, updated_at__date=day
+                                              ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
 
-        departments_data = []
+            dep_list = []
+            for dep in Department.objects.all():
+                dep_patients = Patient.objects.filter(department=dep, created_at__date=day)
+                dep_tolov = dep_patients.filter(payment_status=Patient.PaymentStatus.confirmed
+                                                ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
 
-        for dep in Department.objects.all():
-            dep_patients = Patient.objects.filter(
-                department=dep,
-                created_at__date__range=(start_date, end_date)
-            )
+                dep_list.append({
+                    "department": dep.title,
+                    "jami_bemorlar": dep_patients.count(),
+                    "konsultatsiyalar": Consultations.objects.filter(patient__department=dep,
+                                                                     created_at__date=day).count(),
+                    "tahlillar": Analysis.objects.filter(patient__department=dep, created_at__date=day).count(),
+                    "tolovlar": dep_tolov
+                })
 
-            dep_tolov = dep_patients.filter(
-                payment_status=Patient.PaymentStatus.confirmed
-            ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
-
-            departments_data.append({
-                "department": dep.title,
-                "jami_bemorlar": dep_patients.count(),
-                "konsultatsiyalar": Consultations.objects.filter(
-                    patient__department=dep,
-                    created_at__date__range=(start_date, end_date)
-                ).count(),
-                "tahlillar": Analysis.objects.filter(
-                    patient__department=dep,
-                    created_at__date__range=(start_date, end_date)
-                ).count(),
-                "tolovlar": dep_tolov
+            results.append({
+                "date": day,
+                "umumiy": {
+                    "jami_bemorlar": bemorlar,
+                    "konsultatsiyalar": konsultatsiyalar,
+                    "tahlillar": tahlillar,
+                    "tolovlar": tolovlar,
+                },
+                "departments": dep_list
             })
 
-        return Response({
-            "umumiy": umumiy_data,
-            "departments": departments_data
-        })
+        return Response(results)
 
 
 @extend_schema(tags=['Report'], request=ClinicStatsInputSerializer, responses={200: None})
