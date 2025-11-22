@@ -150,30 +150,13 @@ class ClinicLastWeekAPIView(APIView):
             tolovlar = Patient.objects.filter(payment_status=Patient.PaymentStatus.confirmed, updated_at__date=day
                                               ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
 
-            dep_list = []
-            for dep in Department.objects.all():
-                dep_patients = Patient.objects.filter(department=dep, created_at__date=day)
-                dep_tolov = dep_patients.filter(payment_status=Patient.PaymentStatus.confirmed
-                                                ).aggregate(total=Sum('paid_amount'))['total'] or 0.0
-
-                dep_list.append({
-                    "department": dep.title,
-                    "jami_bemorlar": dep_patients.count(),
-                    "konsultatsiyalar": Consultations.objects.filter(patient__department=dep,
-                                                                     created_at__date=day).count(),
-                    "tahlillar": Analysis.objects.filter(patient__department=dep, created_at__date=day).count(),
-                    "tolovlar": dep_tolov
-                })
-
             results.append({
-                "date": day,
-                "umumiy": {
-                    "jami_bemorlar": bemorlar,
-                    "konsultatsiyalar": konsultatsiyalar,
-                    "tahlillar": tahlillar,
-                    "tolovlar": tolovlar,
-                },
-                "departments": dep_list
+                "day": day,
+                "patients": bemorlar,
+                "consultations": konsultatsiyalar,
+                "tahlillar": tahlillar,
+                "tolovlar": tolovlar,
+
             })
 
         return Response(results)
