@@ -69,10 +69,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         search_value = serializer.validated_data['search']
 
         queryset = Analysis.objects.filter(
-            Q(analysis_result__icontains=search_value)
-            | Q(analysis_result_uz__icontains=search_value)
-            | Q(analysis_result_ru__icontains=search_value)
-            | Q(status__icontains=search_value)
+            Q(status__icontains=search_value)
             | Q(patient__name__icontains=search_value)
             | Q(patient__last_name__icontains=search_value)
             | Q(patient__middle_name__icontains=search_value)
