@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from department.serializers import DepartmentTypesNestSerializer
+from department.serializers import DepartmentTypesNestSerializer, DepartmentSerializer
 from reception.models import Patient, Disease
 from user.serializers import UserCreateSerializer
 
@@ -34,6 +34,7 @@ class PatientPostSerializer(serializers.ModelSerializer):
 
 class DiseaseGetSerializers(serializers.ModelSerializer):
     patient = PatientSerializer(read_only=True)
+    department = DepartmentSerializer(read_only=True)
 
     class Meta:
         model = Disease
