@@ -6,8 +6,9 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import aiofiles
+from decouple import config
 
-BOT_TOKEN = "8311992216:AAFt3Bs5fxecz1GcEtO8MfuLDooZKMkD1_0"
+BOT_TOKEN = config('BOT_TOKEN')
 
 CHECK_PATIENT_URL = "http://45.55.129.34/check-patient/"
 EXPORT_ANALYSIS_URL = "http://45.55.129.34/export-by-phone/"
