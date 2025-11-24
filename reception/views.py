@@ -126,5 +126,5 @@ class PatientDiseasesAPIView(APIView):
 
     def get(self, request, patient_id):
         queryset = Disease.objects.filter(patient_id=patient_id)
-        serializer = DiseaseSerializer(queryset, many=True)
+        serializer = DiseaseGetSerializers(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
