@@ -80,3 +80,9 @@ class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ['id', 'title', 'title_uz', 'title_ru', 'department_types']
+
+
+class DepartmentGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['id', 'title', 'title_uz', 'title_ru', 'department_types']
