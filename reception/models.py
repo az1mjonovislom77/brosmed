@@ -1,5 +1,4 @@
 from django.db import models
-
 from department.models import Department, DepartmentTypes, Result
 from user.models import User
 

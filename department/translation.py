@@ -1,5 +1,4 @@
 from modeltranslation.translator import register, TranslationOptions
-
 from department.models import Department, DepartmentTypes
 
 

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from department.models import Department, DepartmentTypes, Result
 from reception.models import AnalysisResult
 
@@ -70,11 +69,9 @@ class DepartmentTypesSerializer(serializers.ModelSerializer):
 
 
 class DepartmentTypesNestSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = DepartmentTypes
         fields = ['id', 'department', 'title', 'title_uz', 'title_ru', 'price']
-
 
 
 class DepartmentSerializer(serializers.ModelSerializer):

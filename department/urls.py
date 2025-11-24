@@ -1,6 +1,5 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
 from department.views import DepartmentViewSet, DepartmentTypesViewSet, ResultViewSet, AnalysisResultViewSet
 
 router = DefaultRouter()

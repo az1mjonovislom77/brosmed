@@ -107,15 +107,7 @@ class AnalysisFullDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Analysis
-        fields = [
-            'id',
-            'patient',
-            'department_types',
-            'status',
-            'files',
-            'results',
-            'created_at'
-        ]
+        fields = ['id', 'patient', 'department_types', 'status', 'files', 'results', 'created_at']
 
     def get_results(self, obj):
         results = Result.objects.filter(department_types=obj.department_types)

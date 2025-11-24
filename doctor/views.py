@@ -3,7 +3,6 @@ from rest_framework import viewsets, status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-
 from doctor.models import Consultations
 from doctor.serializers import ConsultationsSerializer, ConsultationDetailInputSerializer
 from reception.models import Patient

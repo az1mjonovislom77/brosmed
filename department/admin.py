@@ -1,6 +1,5 @@
 from django.contrib import admin
 from modeltranslation.admin import TranslationAdmin
-
 from department.models import Department, DepartmentTypes, Result
 from reception.models import Patient, AnalysisResult
 
@@ -8,6 +7,7 @@ from reception.models import Patient, AnalysisResult
 class ResultInline(admin.TabularInline):
     model = Result
     extra = 1
+
 
 class AnalysisResultInline(admin.TabularInline):
     model = AnalysisResult

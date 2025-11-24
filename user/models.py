@@ -2,7 +2,6 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin, Group, Permission, BaseUserManager
 from django.db import models
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from department.models import Department
 
 

@@ -1,7 +1,6 @@
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, status
-from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response

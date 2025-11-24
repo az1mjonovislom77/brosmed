@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from doctor.models import Consultations
 from reception.models import Patient
 from user.models import User

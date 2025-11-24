@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from reception.models import Patient
 from user.models import User
 from django.contrib.auth import authenticate
