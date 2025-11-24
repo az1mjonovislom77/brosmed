@@ -51,7 +51,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3002",
     "http://localhost:3003",
     "http://localhost:3004",
-    "https://brosmedcrm-gz9q.vercel.app"
+    "https://brosmedcrm-gz9q.vercel.app",
+    "https://brosmed.uz/"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -60,7 +61,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3002",
     "http://localhost:3003",
     "http://localhost:3004",
-    "https://brosmedcrm-gz9q.vercel.app"
+    "https://brosmedcrm-gz9q.vercel.app",
+    "https://brosmed.uz/"
 ]
 
 MIDDLEWARE = [
