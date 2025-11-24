@@ -95,7 +95,7 @@ async def handle_message(message: types.Message):
             async with httpx.AsyncClient(timeout=15) as client:
                 resp = await client.post(CHECK_PATIENT_URL, json={"phone": clean_phone})
                 if resp.status_code != 200:
-                    await message.answer("Bu raqam bazada topilmadi.")
+                    await message.answer('''Ushbu raqam egasiga tegishli tahlil natijalari mavjud emas.''')
                     del state["phone"]
                     state["step"] = "phone"
                     return

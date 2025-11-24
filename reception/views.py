@@ -61,7 +61,7 @@ class PatientDoctorAPIView(APIView):
 
         diseases = Disease.objects.filter(user=request.user).order_by('-id')
         patient_data = PatientSerializer(patients, many=True).data
-        disease_data = DiseaseSerializer(diseases, many=True).data
+        disease_data = DiseaseGetSerializers(diseases, many=True).data
 
         return Response({
             "patients": patient_data,
