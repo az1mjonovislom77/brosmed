@@ -35,6 +35,8 @@ class PatientPostSerializer(serializers.ModelSerializer):
 class DiseaseGetSerializers(serializers.ModelSerializer):
     patient = PatientSerializer(read_only=True)
     department = DepartmentGetSerializer(read_only=True)
+    department_types = DepartmentTypesNestSerializer(read_only=True)
+    user = UserCreateSerializer(read_only=True)
 
     class Meta:
         model = Disease

@@ -83,7 +83,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class DepartmentGetSerializer(serializers.ModelSerializer):
-    department_types = DepartmentTypesNestSerializer(read_only=True, many=True)
 
     class Meta:
         model = Department
