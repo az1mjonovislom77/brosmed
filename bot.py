@@ -10,8 +10,8 @@ from decouple import config
 
 BOT_TOKEN = config('BOT_TOKEN')
 
-CHECK_PATIENT_URL = "http://45.55.129.34/check-patient/"
-EXPORT_ANALYSIS_URL = "http://45.55.129.34/export-by-phone/"
+CHECK_PATIENT_URL = "https://api.brosmed.uz/check-patient/"
+EXPORT_ANALYSIS_URL = "https://api.brosmed.uz/export-by-phone/"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
