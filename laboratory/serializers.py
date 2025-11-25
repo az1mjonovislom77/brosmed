@@ -58,7 +58,7 @@ class AnalysisNestSerializer(BaseAnalysisSerializer):
 
     class Meta:
         model = Analysis
-        fields = ['id', 'department_types', 'status', 'files']
+        fields = ['id', 'department_types', 'status', 'files', 'created_at']
 
 
 class AnalysisSearchInputSerializer(serializers.Serializer):

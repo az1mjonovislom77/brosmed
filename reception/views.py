@@ -17,7 +17,7 @@ from user.views.user_views import PartialPutMixin
 
 @extend_schema(tags=['Patient'])
 class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
-    queryset = Patient.objects.all()
+    queryset = Patient.objects.all().order_by('-created_at')
     serializer_class = PatientSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
@@ -85,7 +85,7 @@ class PatientAnalysisAPIView(APIView):
         except Patient.DoesNotExist:
             return Response({"error": "Patient not found"}, status=404)
 
-        analyses = Analysis.objects.filter(patient=patient)
+        analyses = Analysis.objects.filter(patient=patient).order_by('-created_at')
         output = AnalysisNestSerializer(analyses, many=True, context={"request": request})
         return Response(output.data)
 
