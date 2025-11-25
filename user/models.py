@@ -1,7 +1,6 @@
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin, Group, Permission, BaseUserManager
 from django.db import models
-from rest_framework_simplejwt.tokens import RefreshToken
 from department.models import Department
 
 
@@ -56,14 +55,3 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'user'
-
-
-class UserTokenService:
-
-    @staticmethod
-    def get_tokens_for_user(user: User):
-        refresh = RefreshToken.for_user(user)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }

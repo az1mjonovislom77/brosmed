@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from department.serializers import DepartmentTypesNestSerializer, DepartmentGetSerializer
 from reception.models import Patient, Disease
-from user.serializers import UserCreateSerializer
+from user.serializers.user_serializers import UserCreateSerializer
 
 
 class DiseaseSerializer(serializers.ModelSerializer):

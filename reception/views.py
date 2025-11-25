@@ -9,9 +9,10 @@ from laboratory.serializers import AnalysisByPatientInputSerializer, AnalysisNes
 from reception.models import Patient, Analysis, Disease
 from reception.serializers import PatientSerializer, PatientPostSerializer, PatientSearchInputSerializer, \
     DiseaseSerializer, DiseaseGetSerializers
-from user.views import PartialPutMixin
 from datetime import timedelta
 from django.db.models import Q
+
+from user.views.user_views import PartialPutMixin
 
 
 @extend_schema(tags=['Patient'])

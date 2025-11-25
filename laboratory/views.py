@@ -13,7 +13,6 @@ from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, A
 from laboratory.utils import create_analysis_docx
 from reception.models import Analysis
 from user.models import User
-from user.views import PartialPutMixin
 from rest_framework.response import Response
 from django.db.models import Q
 from django.conf import settings
@@ -21,6 +20,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
 from reception.models import Patient, AnalysisResult
+from user.views.user_views import PartialPutMixin
 
 
 @extend_schema(tags=['Analysis'])

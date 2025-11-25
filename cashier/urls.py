@@ -1,6 +1,5 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
 from cashier.views import CashierViewSet
 
 router = DefaultRouter()

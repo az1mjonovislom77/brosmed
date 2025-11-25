@@ -6,7 +6,7 @@ from department.models import Department, DepartmentTypes, Result
 from department.serializers import DepartmentSerializer, DepartmentTypesSerializer, ResultSerializer, \
     AnalysisResultPostSerializer, AnalysisResultCreateSerializer
 from reception.models import AnalysisResult
-from user.views import PartialPutMixin
+from user.views.user_views import PartialPutMixin
 
 
 @extend_schema(tags=['DepartmentTypes'])

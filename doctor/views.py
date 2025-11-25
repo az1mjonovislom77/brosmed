@@ -7,11 +7,11 @@ from doctor.models import Consultations
 from doctor.serializers import ConsultationsSerializer, ConsultationDetailInputSerializer
 from reception.models import Patient
 from user.models import User
-from user.serializers import UserCreateSerializer
-from user.views import PartialPutMixin
 from rest_framework.decorators import action
 from django.utils import timezone
 from rest_framework.response import Response
+from user.serializers.user_serializers import UserCreateSerializer
+from user.views.user_views import PartialPutMixin
 
 
 @extend_schema(tags=['Doctor'])

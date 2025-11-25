@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from department.models import Department
 from doctor.models import Consultations
 from reception.models import Patient, Analysis
-from user.views import PartialPutMixin
+from user.views.user_views import PartialPutMixin
 from utils.models import ClinicAbout
 from utils.serializers import ClinicAboutSerializer, ClinicStatsInputSerializer, ClinicStatsResponseSerializer
 from django.db.models import Sum
