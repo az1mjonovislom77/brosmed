@@ -25,8 +25,20 @@ class PatientNestSerializer(serializers.ModelSerializer):
                   'birth_date', 'payment_status', 'patient_status']
 
 
-class AnalysisSerializer(serializers.ModelSerializer):
+class BaseAnalysisSerializer(serializers.ModelSerializer):
     files = AnalysisFileSerializer(many=True, required=False, source='analysisfile_set')
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        files = request.FILES.getlist('files')
+        validated_data.pop('analysisfile_set', None)
+        analysis = Analysis.objects.create(**validated_data)
+        for file in files:
+            AnalysisFile.objects.create(analysis=analysis, file=file)
+        return analysis
+
+
+class AnalysisSerializer(BaseAnalysisSerializer):
     department_types = DepartmentTypesSerializer(read_only=True)
     patient = PatientNestSerializer(read_only=True)
 
@@ -34,57 +46,19 @@ class AnalysisSerializer(serializers.ModelSerializer):
         model = Analysis
         fields = ['id', 'patient', 'department_types', 'status', 'files']
 
-    def create(self, validated_data):
-        request = self.context.get('request')
 
-        files = request.FILES.getlist('files')
-        validated_data.pop('analysisfile_set', None)
-        analysis = Analysis.objects.create(**validated_data)
-        for file in files:
-            AnalysisFile.objects.create(analysis=analysis, file=file)
-
-        return analysis
-
-
-class AnalysisPostSerializer(serializers.ModelSerializer):
-    files = AnalysisFileSerializer(many=True, required=False, source='analysisfile_set')
-
+class AnalysisPostSerializer(BaseAnalysisSerializer):
     class Meta:
         model = Analysis
         fields = ['id', 'patient', 'department_types', 'status', 'files']
 
-    def create(self, validated_data):
-        request = self.context.get('request')
-        files = request.FILES.getlist('files')
 
-        validated_data.pop('analysisfile_set', None)
-
-        analysis = Analysis.objects.create(**validated_data)
-
-        for file in files:
-            AnalysisFile.objects.create(analysis=analysis, file=file)
-
-        return analysis
-
-
-class AnalysisNestSerializer(serializers.ModelSerializer):
-    files = AnalysisFileSerializer(many=True, required=False, source='analysisfile_set')
+class AnalysisNestSerializer(BaseAnalysisSerializer):
     department_types = DepartmentTypesNestSerializer(read_only=True)
 
     class Meta:
         model = Analysis
         fields = ['id', 'department_types', 'status', 'files']
-
-    def create(self, validated_data):
-        request = self.context.get('request')
-
-        files = request.FILES.getlist('files')
-        validated_data.pop('analysisfile_set', None)
-        analysis = Analysis.objects.create(**validated_data)
-        for file in files:
-            AnalysisFile.objects.create(analysis=analysis, file=file)
-
-        return analysis
 
 
 class AnalysisSearchInputSerializer(serializers.Serializer):

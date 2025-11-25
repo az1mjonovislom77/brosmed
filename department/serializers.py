@@ -60,9 +60,7 @@ class DepartmentTypesSerializer(serializers.ModelSerializer):
 
         for res in result_data:
             analysis_result_data = res.pop('analysis_result', [])
-
             result_obj = Result.objects.create(department_types=department_type, **res)
-
             for ar in analysis_result_data: AnalysisResult.objects.create(result=result_obj, **ar)
 
         return department_type
@@ -83,7 +81,6 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 
 class DepartmentGetSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Department
         fields = ['id', 'title', 'title_uz', 'title_ru', 'department_types']

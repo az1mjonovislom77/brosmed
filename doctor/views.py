@@ -34,25 +34,21 @@ class ConsultationsViewSet(viewsets.ModelViewSet, PartialPutMixin):
     @action(detail=False, methods=['get'])
     def stats(self, request):
         today = timezone.now().date()
-        jami_bemorlar = Patient.objects.filter(user=request.user).count()
-        bugungi_bemorlar = Patient.objects.filter(created_at__date=today, user=request.user).count()
-        kutayotgan = Patient.objects.filter(created_at__date=today, patient_status=Patient.PatientStatus.in_register,
-                                            user=request.user).count()
-        davolanayotgan = Patient.objects.filter(created_at__date=today, patient_status=Patient.PatientStatus.treating,
-                                                user=request.user).count()
-        sogaygan = Patient.objects.filter(user=request.user, patient_status=Patient.PatientStatus.recovered).count()
-
-        shifokorlar = User.objects.filter(role=User.UserRoles.DOCTOR).count()
 
         oxirgi_konsultatsiyalar = Consultations.objects.filter(user=request.user).order_by('-created_at')[:10]
 
         data = {
-            "jami_bemorlar": jami_bemorlar,
-            "bugungi_bemorlar": bugungi_bemorlar,
-            "kutayotgan": kutayotgan,
-            "davolanayotgan": davolanayotgan,
-            "sogaygan": sogaygan,
-            "shifokorlar": shifokorlar,
+            "jami_bemorlar": Patient.objects.filter(user=request.user).count(),
+            "bugungi_bemorlar": Patient.objects.filter(created_at__date=today, user=request.user).count(),
+            "kutayotgan": Patient.objects.filter(created_at__date=today,
+                                                 patient_status=Patient.PatientStatus.in_register,
+                                                 user=request.user).count(),
+            "davolanayotgan": Patient.objects.filter(created_at__date=today,
+                                                     patient_status=Patient.PatientStatus.treating,
+                                                     user=request.user).count(),
+            "sogaygan": Patient.objects.filter(user=request.user,
+                                               patient_status=Patient.PatientStatus.recovered).count(),
+            "shifokorlar": User.objects.filter(role=User.UserRoles.DOCTOR).count(),
             'oxirgi_konsultatsiyalar': (
                 ConsultationsSerializer(oxirgi_konsultatsiyalar, many=True, context={'request': request}).data if
                 oxirgi_konsultatsiyalar else None)

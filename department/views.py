@@ -40,7 +40,7 @@ class AnalysisResultViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        many = isinstance(data, list)  # array POST bo‘lsa
+        many = isinstance(data, list)
         serializer = self.get_serializer(data=data, many=many)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
