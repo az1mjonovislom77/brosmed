@@ -62,7 +62,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3003",
     "http://localhost:3004",
     "https://brosmedcrm-gz9q.vercel.app",
-    "https://brosmed.uz/"
+    "https://brosmed.uz"
 ]
 
 MIDDLEWARE = [
