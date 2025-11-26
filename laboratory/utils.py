@@ -85,18 +85,19 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     podpis.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.png")
+    print("FOOTER PATH:", footer_image_path)
 
-    if footer_image_path and os.path.exists(footer_image_path):
+    if os.path.exists(footer_image_path):
         doc.add_paragraph()
         try:
             p = doc.add_paragraph()
             r = p.add_run()
-            r.add_picture(footer_image_path, width=Inches(5.5))
+            r.add_picture(footer_image_path, width=Inches(3))
             p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         except Exception as e:
             print("Footer image error:", e)
-
-    doc.save(output_path)
+    else:
+        print("FOOTER NOT FOUND:", footer_image_path)
 
 
 logger = logging.getLogger(__name__)
