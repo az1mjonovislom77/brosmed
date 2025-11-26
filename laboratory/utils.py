@@ -74,12 +74,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-    # Doctor
-    podpis = doc.add_paragraph()
-    final_doctor_text = f"Laborant: {doctor_name}" if doctor_name else "Laborant: ____________________"
-    podpis_run = podpis.add_run(final_doctor_text)
-    podpis_run.font.size = Pt(12)
-    podpis.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     # Footer JPG rasm
     footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.jpg")
@@ -87,7 +81,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         p = doc.add_paragraph()
         r = p.add_run()
         r.add_picture(footer_image_path, width=Inches(3))
-        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     # Word faylini saqlash
     doc.save(output_path)
