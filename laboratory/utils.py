@@ -99,6 +99,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     else:
         print("FOOTER NOT FOUND:", footer_image_path)
 
+    doc.save(output_path)
+
 
 logger = logging.getLogger(__name__)
 
