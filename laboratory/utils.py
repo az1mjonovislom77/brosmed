@@ -16,8 +16,7 @@ from django.utils import timezone
 import logging
 
 
-def create_analysis_docx(patient, analysis, results_list, output_path,
-                         header_image_path="/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png",
+def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
                          analysis_title="Analiz", doctor_name=""):
     doc = Document()
     style = doc.styles['Normal']
@@ -25,14 +24,11 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     style._element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
     style.font.size = Pt(11)
     if header_image_path and os.path.exists(header_image_path):
-        try:
-            p = doc.add_paragraph()
-            r = p.add_run()
-            r.add_picture(header_image_path, width=Inches(5.5))
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-            doc.add_paragraph()  # space
-        except Exception:
-            pass
+        p = doc.add_paragraph()
+        r = p.add_run()
+        r.add_picture(header_image_path, width=Inches(5.5))
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        doc.add_paragraph()
 
     title = doc.add_paragraph()
     title_run = title.add_run("Brosmed Laboratoriya\n")
@@ -58,14 +54,13 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
     info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
                                                                                            None) else ""
+
     doc.add_paragraph()
+
+    # Results table
     n_rows = max(1, len(results_list)) + 1
     table = doc.add_table(rows=n_rows, cols=3)
     table.style = 'Table Grid'
-    table.autofit = False
-    table.columns[0].width = Inches(3)
-    table.columns[1].width = Inches(1.5)
-    table.columns[2].width = Inches(2)
     hdr_cells = table.rows[0].cells
     hdr_cells[0].text = "Tahlil nomi"
     hdr_cells[1].text = "Tahlil natijasi"
@@ -78,27 +73,23 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
         tcell[2].text = row.get('norma', '')
 
     doc.add_paragraph()
+
+    # Doctor
     podpis = doc.add_paragraph()
     final_doctor_text = f"Laborant: {doctor_name}" if doctor_name else "Laborant: ____________________"
     podpis_run = podpis.add_run(final_doctor_text)
     podpis_run.font.size = Pt(12)
     podpis.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
-    footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.png")
-    print("FOOTER PATH:", footer_image_path)
-
+    # Footer JPG rasm
+    footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.jpg")
     if os.path.exists(footer_image_path):
-        doc.add_paragraph()
-        try:
-            p = doc.add_paragraph()
-            r = p.add_run()
-            r.add_picture(footer_image_path, width=Inches(3))
-            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        except Exception as e:
-            print("Footer image error:", e)
-    else:
-        print("FOOTER NOT FOUND:", footer_image_path)
+        p = doc.add_paragraph()
+        r = p.add_run()
+        r.add_picture(footer_image_path, width=Inches(3))
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
+    # Word faylini saqlash
     doc.save(output_path)
 
 
