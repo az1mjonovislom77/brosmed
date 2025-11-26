@@ -84,7 +84,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     podpis_run.font.size = Pt(12)
     podpis.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
-    footer_image_path = "/images/pechat.png"
+    footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.png")
 
     if footer_image_path and os.path.exists(footer_image_path):
         doc.add_paragraph()
