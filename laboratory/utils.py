@@ -89,6 +89,11 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         tcell[1].text = row.get('value', '')
         tcell[2].text = row.get('norma', '')
 
+        for j in range(3):
+            paragraph = tcell[j].paragraphs[0]
+            for run in paragraph.runs:
+                run.font.size = Pt(11)
+
     doc.add_paragraph()
 
     footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.jpg")
