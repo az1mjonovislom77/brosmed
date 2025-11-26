@@ -87,6 +87,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     footer_image_path = "/images/pechat.png"
 
     if footer_image_path and os.path.exists(footer_image_path):
+        doc.add_paragraph()
         try:
             p = doc.add_paragraph()
             r = p.add_run()
