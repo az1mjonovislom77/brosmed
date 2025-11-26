@@ -13,7 +13,7 @@ from reception.models import Patient, AnalysisResult, Analysis
 from user.models import User
 from django.conf import settings
 from django.utils import timezone
-
+import logging
 
 def create_analysis_docx(patient, analysis, results_list, output_path,
                          header_image_path="/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png",
@@ -85,6 +85,29 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
 
     doc.save(output_path)
 
+logger = logging.getLogger(__name__)
+
+def get_patient_by_phone(raw_phone):
+    """
+    Telefon raqam bo'yicha bemorni topish.
+    normalize_phone bilan moslashtirilgan.
+    """
+    phone = normalize_phone(raw_phone)
+    if not phone:
+        return None, "Invalid phone after normalization"
+
+    # Avval to'g'ridan-to'g'ri filter
+    patient = Patient.objects.filter(phone_number=phone).first()
+    if patient:
+        return patient, None
+
+    # Agar topilmasa, barcha bazadagi raqamlarni tekshirish
+    for p in Patient.objects.exclude(phone_number__isnull=True).exclude(phone_number__exact=''):
+        normalized = normalize_phone(p.phone_number)
+        if normalized == phone:
+            return p, None
+
+    return None, "Patient not found"
 
 @csrf_exempt
 def export_analysis_by_phone(request):
@@ -95,21 +118,13 @@ def export_analysis_by_phone(request):
         body = json.loads(request.body)
         raw_phone = body.get("phone", "").strip()
         department_type_id = body.get("department_type_id")
-    except:
+    except Exception:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    phone = normalize_phone(raw_phone)
-    if not phone:
-        return JsonResponse({"error": "Invalid phone"}, status=400)
-
-    patient = Patient.objects.filter(phone_number=phone).first()
-    if not patient:
-        for p in Patient.objects.all():
-            if normalize_phone(p.phone_number) == phone:
-                patient = p
-                break
-    if not patient:
-        return JsonResponse({"error": "Patient not found"}, status=404)
+    patient, err = get_patient_by_phone(raw_phone)
+    if err:
+        logger.info(f"Phone search failed: {raw_phone}, reason: {err}")
+        return JsonResponse({"error": err}, status=404)
 
     analyses_qs = Analysis.objects.filter(patient=patient)
     if department_type_id and str(department_type_id).isdigit():
@@ -160,7 +175,6 @@ def export_analysis_by_phone(request):
             if title in seen_titles:
                 continue
             seen_titles.add(title)
-
             results_list.append({
                 'title': title,
                 'value': ar.analysis_result or '-',
@@ -171,7 +185,6 @@ def export_analysis_by_phone(request):
             results_list = [{'title': 'Natija hali kiritilmagan', 'value': '', 'norma': ''}]
 
         doctor_name = "Laborant"
-
         if analysis.department_types:
             departments = Department.objects.filter(department_types=analysis.department_types)
             if departments.exists():
