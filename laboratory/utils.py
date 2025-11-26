@@ -15,6 +15,7 @@ from django.conf import settings
 from django.utils import timezone
 import logging
 
+
 def create_analysis_docx(patient, analysis, results_list, output_path,
                          header_image_path="/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png",
                          analysis_title="Analiz", doctor_name=""):
@@ -83,9 +84,22 @@ def create_analysis_docx(patient, analysis, results_list, output_path,
     podpis_run.font.size = Pt(12)
     podpis.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
+    footer_image_path = "/images/pechat.png"
+
+    if footer_image_path and os.path.exists(footer_image_path):
+        try:
+            p = doc.add_paragraph()
+            r = p.add_run()
+            r.add_picture(footer_image_path, width=Inches(5.5))
+            p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        except Exception as e:
+            print("Footer image error:", e)
+
     doc.save(output_path)
 
+
 logger = logging.getLogger(__name__)
+
 
 def get_patient_by_phone(raw_phone):
     """
@@ -108,6 +122,7 @@ def get_patient_by_phone(raw_phone):
             return p, None
 
     return None, "Patient not found"
+
 
 @csrf_exempt
 def export_analysis_by_phone(request):
