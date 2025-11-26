@@ -41,8 +41,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         text = ("MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO' CHASI, 31-UY TEL: (75) 223-47-47\n"
                 "MoBIL: (97) 070-47-47 ; (97) 310-21-01")
         run_text = p_text.add_run(text)
-        run_text.font.size = Pt(12)
-        p_text.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        run_text.font.size = Pt(11)
+        p_text.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
         doc.add_paragraph()  # biroz space qo'shamiz
 
