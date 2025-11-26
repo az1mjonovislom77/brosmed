@@ -26,8 +26,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     if header_image_path and os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
-        table.columns[0].width = Inches(1.5)
-        table.columns[1].width = Inches(4)
+        table.columns[0].width = Inches(3)
+        table.columns[1].width = Inches(3.5)
 
         cell_img = table.cell(0, 0)
         p_img = cell_img.paragraphs[0]
