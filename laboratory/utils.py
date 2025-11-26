@@ -24,11 +24,28 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     style._element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
     style.font.size = Pt(11)
     if header_image_path and os.path.exists(header_image_path):
-        p = doc.add_paragraph()
-        r = p.add_run()
-        r.add_picture(header_image_path, width=Inches(5.5))
-        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-        doc.add_paragraph()
+        table = doc.add_table(rows=1, cols=2)
+        table.autofit = False
+        table.columns[0].width = Inches(1.5)
+        table.columns[1].width = Inches(4)
+
+        cell_img = table.cell(0, 0)
+        p_img = cell_img.paragraphs[0]
+        run_img = p_img.add_run()
+        run_img.add_picture(header_image_path, width=Inches(1.5))
+        p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+        # O'ng ustunga matn
+        cell_text = table.cell(0, 1)
+        p_text = cell_text.paragraphs[0]
+        text = ("MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO' CHASI, 31-UY\n"
+                "TEL: (75) 223-47-47\n"
+                "MoBIL: (97) 070-47-47 ; (97) 310-21-01")
+        run_text = p_text.add_run(text)
+        run_text.font.size = Pt(10)
+        p_text.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+        doc.add_paragraph()  # biroz space qo'shamiz
 
     title = doc.add_paragraph()
     title_run = title.add_run("Brosmed Laboratoriya\n")
@@ -74,8 +91,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-
-    # Footer JPG rasm
     footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.jpg")
     if os.path.exists(footer_image_path):
         p = doc.add_paragraph()
@@ -141,7 +156,7 @@ def export_analysis_by_phone(request):
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
     os.makedirs(export_dir, exist_ok=True)
 
-    header_image_path = os.path.join(settings.STATIC_ROOT or "", "images", "header.png")
+    header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
     if not os.path.exists(header_image_path):
         header_image_path = None
 
