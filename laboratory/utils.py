@@ -187,10 +187,14 @@ def export_analysis_by_phone(request):
             title = ar.result.title.strip()
             if title in seen_titles:
                 continue
+            if not ar.analysis_result:
+                continue
+
             seen_titles.add(title)
+
             results_list.append({
                 'title': title,
-                'value': ar.analysis_result or '-',
+                'value': ar.analysis_result,
                 'norma': ar.result.norma or '-'
             })
 
