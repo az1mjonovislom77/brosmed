@@ -37,7 +37,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         cell_text = table.cell(0, 1)
         p_text = cell_text.paragraphs[0]
-        p_text.space_before = Pt(10)
+        p_text.space_before = Pt(30)
         text = ("MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO' CHASI, 31-UY TEL: (75) 223-47-47\n"
                 "MoBIL: (97) 070-47-47 ; (97) 310-21-01")
         run_text = p_text.add_run(text)
@@ -73,7 +73,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-    # Results table
     n_rows = max(1, len(results_list)) + 1
     table = doc.add_table(rows=n_rows, cols=3)
     table.style = 'Table Grid'
