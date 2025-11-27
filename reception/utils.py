@@ -42,17 +42,6 @@ class ExportAnalysisByPatientView(APIView):
 
         analysis_title = analysis.department_types.title.strip() if analysis.department_types and analysis.department_types.title else "Analiz"
 
-        doctor_name = "Laborant"
-        if analysis.department_types and analysis.department_types.department:
-            dept = analysis.department_types.department
-            staff = User.objects.filter(
-                department=dept, role__in=['l', 'd'], is_active=True, full_name__isnull=False, full_name__gt=''
-            ).first()
-            if staff:
-                doctor_name = staff.full_name.strip()
-            elif analysis.department_types.title:
-                doctor_name = analysis.department_types.title
-
         class DummyAnalysis:
             id = analysis_id
             created_at = timezone.now()
@@ -69,8 +58,7 @@ class ExportAnalysisByPatientView(APIView):
             results_list=results_list,
             output_path=out_path,
             header_image_path=header_image_path,
-            analysis_title=analysis_title,
-            doctor_name=doctor_name
+            analysis_title=analysis_title
         )
 
         return FileResponse(open(out_path, 'rb'), as_attachment=True, filename=out_name)

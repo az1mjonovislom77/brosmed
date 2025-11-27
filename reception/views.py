@@ -11,7 +11,6 @@ from reception.serializers import PatientSerializer, PatientPostSerializer, Pati
     DiseaseSerializer, DiseaseGetSerializers
 from datetime import timedelta
 from django.db.models import Q
-
 from user.views.user_views import PartialPutMixin
 
 

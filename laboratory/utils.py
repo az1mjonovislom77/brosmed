@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import logging
 from django.http import JsonResponse
 from docx import Document
 from docx.shared import Pt, Inches
@@ -8,16 +9,13 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from django.views.decorators.csrf import csrf_exempt
 from bot import normalize_phone
-from department.models import Department
 from reception.models import Patient, AnalysisResult, Analysis
-from user.models import User
 from django.conf import settings
 from django.utils import timezone
-import logging
 
 
 def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
-                         analysis_title="Analiz", doctor_name=""):
+                         analysis_title="Analiz"):
     doc = Document()
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
@@ -199,37 +197,16 @@ def export_analysis_by_phone(request):
         if not results_list:
             results_list = [{'title': 'Natija hali kiritilmagan', 'value': '', 'norma': ''}]
 
-        doctor_name = "Laborant"
-        if analysis.department_types:
-            departments = Department.objects.filter(department_types=analysis.department_types)
-            if departments.exists():
-                dept = departments.first()
-                staff = User.objects.filter(
-                    department=dept,
-                    role__in=['l', 'd'],
-                    is_active=True,
-                    full_name__isnull=False,
-                    full_name__gt=''
-                ).first()
-                if staff:
-                    doctor_name = staff.full_name.strip()
-                else:
-                    doctor_name = f"{dept.title}" if dept.title else "Laborant"
-
         create_analysis_docx(
             patient=patient,
             analysis=analysis,
             results_list=results_list,
             output_path=filepath,
             header_image_path=header_image_path,
-            analysis_title=f"{dept_name} natijasi",
-            doctor_name=doctor_name
+            analysis_title=f"{dept_name} natijasi"
         )
 
         file_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{filename}")
-        files_created.append({
-            "filename": filename,
-            "url": file_url
-        })
+        files_created.append({"filename": filename, "url": file_url})
 
     return JsonResponse({"files": files_created})
