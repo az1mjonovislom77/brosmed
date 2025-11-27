@@ -184,19 +184,28 @@ def export_analysis_by_phone(request):
         for ar in candidate_results:
             if not ar.result or not ar.result.title:
                 continue
-            if not ar.analysis_result or str(ar.analysis_result).strip() == "":
+
+            analysis_value = ar.analysis_result
+
+            if analysis_value is None:
+                continue
+
+            if isinstance(analysis_value, str) and analysis_value.strip() == "":
+                continue
+
+            analysis_value = str(analysis_value).strip()
+
+            if analysis_value.lower() in ["", "none", "null"]:
                 continue
 
             title = ar.result.title.strip()
-
             if title in seen_titles:
                 continue
-
             seen_titles.add(title)
 
             results_list.append({
                 'title': title,
-                'value': ar.analysis_result,
+                'value': analysis_value,
                 'norma': ar.result.norma or '-'
             })
 
