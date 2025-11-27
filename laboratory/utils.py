@@ -184,10 +184,12 @@ def export_analysis_by_phone(request):
         for ar in candidate_results:
             if not ar.result or not ar.result.title:
                 continue
-            title = ar.result.title.strip()
-            if title in seen_titles:
+            if not ar.analysis_result or str(ar.analysis_result).strip() == "":
                 continue
-            if not ar.analysis_result:
+
+            title = ar.result.title.strip()
+
+            if title in seen_titles:
                 continue
 
             seen_titles.add(title)
