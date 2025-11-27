@@ -186,7 +186,6 @@ def export_analysis_by_phone(request):
                 continue
 
             raw_value = ar.analysis_result
-
             if raw_value is None:
                 continue
 
@@ -199,11 +198,18 @@ def export_analysis_by_phone(request):
                 continue
             seen_titles.add(title)
 
+            norma_raw = ar.result.norma
+            if norma_raw is None:
+                norma_value = ""
+            else:
+                norma_value = str(norma_raw).strip()
+
             results_list.append({
                 "title": title,
                 "value": value,
-                "norma": ar.result.norma or "-"
+                "norma": norma_value
             })
+
         if not results_list:
             results_list = [{'title': 'Natija hali kiritilmagan', 'value': '', 'norma': ''}]
 
