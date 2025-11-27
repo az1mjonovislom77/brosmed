@@ -35,7 +35,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run_img.add_picture(header_image_path, width=Inches(3))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
-        # O'ng ustunga matn
         cell_text = table.cell(0, 1)
         p_text = cell_text.paragraphs[0]
         p_text.space_before = Pt(10)
@@ -45,7 +44,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run_text.font.size = Pt(10)
         p_text.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
-        doc.add_paragraph()  # biroz space qo'shamiz
+        doc.add_paragraph()
 
     title = doc.add_paragraph()
     title_run = title.add_run("Brosmed Laboratoriya\n")
@@ -103,7 +102,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         r.add_picture(footer_image_path, width=Inches(3))
         p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
-    # Word faylini saqlash
     doc.save(output_path)
 
 
@@ -111,20 +109,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_patient_by_phone(raw_phone):
-    """
-    Telefon raqam bo'yicha bemorni topish.
-    normalize_phone bilan moslashtirilgan.
-    """
     phone = normalize_phone(raw_phone)
     if not phone:
         return None, "Invalid phone after normalization"
 
-    # Avval to'g'ridan-to'g'ri filter
     patient = Patient.objects.filter(phone_number=phone).first()
     if patient:
         return patient, None
 
-    # Agar topilmasa, barcha bazadagi raqamlarni tekshirish
     for p in Patient.objects.exclude(phone_number__isnull=True).exclude(phone_number__exact=''):
         normalized = normalize_phone(p.phone_number)
         if normalized == phone:

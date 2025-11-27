@@ -61,7 +61,7 @@ class ExportAnalysisByPatientView(APIView):
         timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
         out_name = f"analysis_{patient.id}_{timestamp}.docx"
         out_path = os.path.join(getattr(settings, 'MEDIA_ROOT', '/tmp'), out_name)
-        header_image_path = "/mnt/data/51cfb6cc-75b8-476e-a370-7a187b7af31b.png"
+        header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
 
         create_analysis_docx(
             patient=patient,
