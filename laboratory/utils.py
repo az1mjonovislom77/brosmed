@@ -185,17 +185,13 @@ def export_analysis_by_phone(request):
             if not ar.result or not ar.result.title:
                 continue
 
-            analysis_value = ar.analysis_result
+            raw_value = ar.analysis_result
 
-            if analysis_value is None:
+            if raw_value is None:
                 continue
 
-            if isinstance(analysis_value, str) and analysis_value.strip() == "":
-                continue
-
-            analysis_value = str(analysis_value).strip()
-
-            if analysis_value.lower() in ["", "none", "null"]:
+            value = str(raw_value).strip()
+            if value == "" or value.lower() in ["none", "null"]:
                 continue
 
             title = ar.result.title.strip()
@@ -204,11 +200,10 @@ def export_analysis_by_phone(request):
             seen_titles.add(title)
 
             results_list.append({
-                'title': title,
-                'value': analysis_value,
-                'norma': ar.result.norma or '-'
+                "title": title,
+                "value": value,
+                "norma": ar.result.norma or "-"
             })
-
         if not results_list:
             results_list = [{'title': 'Natija hali kiritilmagan', 'value': '', 'norma': ''}]
 
