@@ -71,24 +71,65 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-    n_rows = max(1, len(results_list)) + 1
-    table = doc.add_table(rows=n_rows, cols=3)
-    table.style = 'Table Grid'
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = "Tahlil nomi"
-    hdr_cells[1].text = "Tahlil natijasi"
-    hdr_cells[2].text = "Norma"
+    valid_results = []
+    for item in results_list:
+        raw_value = item.get('value')
+        if raw_value is None:
+            continue
+        value_str = str(raw_value).strip()
+        if not value_str or value_str.lower() in ['none', 'null', '']:
+            continue
 
-    for i, row in enumerate(results_list, start=1):
-        tcell = table.rows[i].cells
-        tcell[0].text = row.get('title', '')
-        tcell[1].text = row.get('value', '')
-        tcell[2].text = row.get('norma', '')
+        title = item.get('title', '').strip()
+        norma = item.get('norma', '')
+        norma_str = str(norma).strip() if norma is not None else ''
+        if not norma_str:
+            norma_str = "-"
 
-        for j in range(3):
-            paragraph = tcell[j].paragraphs[0]
-            for run in paragraph.runs:
-                run.font.size = Pt(11)
+        norma_str = norma_str.replace('\n', ' | ') \
+            .replace('Мужчины:', 'М:') \
+            .replace('Женщины:', 'Ж:') \
+            .replace('Жен:', 'Ж:') \
+            .replace('Муж:', 'М:')
+
+        valid_results.append({
+            'title': title,
+            'value': value_str,
+            'norma': norma_str
+        })
+
+    if not valid_results:
+        p = doc.add_paragraph("Natija hali kiritilmagan")
+        p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+        run = p.runs[0]
+        run.italic = True
+        run.font.size = Pt(12)
+        run.font.name = 'Times New Roman'
+    else:
+        table = doc.add_table(rows=1, cols=3, style='Table Grid')
+        table.autofit = True
+
+        hdr = table.rows[0].cells
+        hdr[0].text = "Tahlil nomi"
+        hdr[1].text = "Tahlil natijasi"
+        hdr[2].text = "Norma"
+
+        for item in valid_results:
+            row = table.add_row().cells
+            row[0].text = item['title']
+            row[1].text = item['value']
+            row[2].text = item['norma']
+
+            for cell in row:
+                for paragraph in cell.paragraphs:
+                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+                    for run in paragraph.runs:
+                        run.font.name = 'Times New Roman'
+                        run.font.size = Pt(11)
+                    if not paragraph.runs:
+                        r = paragraph.add_run(paragraph.text)
+                        r.font.name = 'Times New Roman'
+                        r.font.size = Pt(11)
 
     doc.add_paragraph()
 
@@ -100,7 +141,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     doc.save(output_path)
-
 
 logger = logging.getLogger(__name__)
 
