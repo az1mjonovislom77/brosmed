@@ -133,7 +133,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-    full_name = analysis.department.user.full_name if hasattr(analysis.department, "user") else ""
+    full_name = analysis.department.user.full_name
 
     sign_table = doc.add_table(rows=1, cols=2)
     sign_table.autofit = False
@@ -142,7 +142,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     left_cell = sign_table.cell(0, 0)
     left_p = left_cell.paragraphs[0]
-    left_p.add_run("Врач лаборант:  ________________")
+    left_p.add_run("Vrach laborant:  __________________")
     left_p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
     right_cell = sign_table.cell(0, 1)
