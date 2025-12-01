@@ -133,6 +133,25 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
+    full_name = analysis.department.user.full_name if hasattr(analysis.department, "user") else ""
+
+    sign_table = doc.add_table(rows=1, cols=2)
+    sign_table.autofit = False
+    sign_table.columns[0].width = Inches(3)
+    sign_table.columns[1].width = Inches(3)
+
+    left_cell = sign_table.cell(0, 0)
+    left_p = left_cell.paragraphs[0]
+    left_p.add_run("Врач лаборант:  ________________")
+    left_p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+    right_cell = sign_table.cell(0, 1)
+    right_p = right_cell.paragraphs[0]
+    right_p.add_run(full_name)
+    right_p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+
+    doc.add_paragraph()
+
     footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.jpg")
     if os.path.exists(footer_image_path):
         p = doc.add_paragraph()
@@ -141,6 +160,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     doc.save(output_path)
+
 
 logger = logging.getLogger(__name__)
 
