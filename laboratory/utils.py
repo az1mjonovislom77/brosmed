@@ -133,8 +133,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-    full_name = analysis.department.user.full_name
-
     sign_table = doc.add_table(rows=1, cols=2)
     sign_table.autofit = False
     sign_table.columns[0].width = Inches(3)
@@ -142,12 +140,11 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     left_cell = sign_table.cell(0, 0)
     left_p = left_cell.paragraphs[0]
-    left_p.add_run("Vrach laborant:  __________________")
+    left_p.add_run("Laborant:  __________________")
     left_p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
     right_cell = sign_table.cell(0, 1)
     right_p = right_cell.paragraphs[0]
-    right_p.add_run(full_name)
     right_p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     doc.add_paragraph()
