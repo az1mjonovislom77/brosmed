@@ -150,7 +150,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     right_cell = sign_table.cell(0, 1)
     right_p = right_cell.paragraphs[0]
     right_p.add_run(full_name)
-    right_p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+    right_p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
     doc.add_paragraph()
 
