@@ -13,6 +13,8 @@ from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 from django.utils import timezone
 
+from user.models import User
+
 
 def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
                          analysis_title="Analiz"):
@@ -133,6 +135,11 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
+    dept = analysis.department_types.department
+
+    user = User.objects.filter(department=dept).first()
+    full_name = user.full_name if user else ""
+
     sign_table = doc.add_table(rows=1, cols=2)
     sign_table.autofit = False
     sign_table.columns[0].width = Inches(3)
@@ -145,6 +152,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     right_cell = sign_table.cell(0, 1)
     right_p = right_cell.paragraphs[0]
+    right_p.add_run(full_name)
     right_p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     doc.add_paragraph()
