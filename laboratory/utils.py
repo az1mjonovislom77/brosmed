@@ -224,10 +224,6 @@ def export_analysis_by_phone(request):
             dept_name = analysis.department_types.title.strip()
 
         created_at = analysis.created_at
-        date_str = created_at.strftime("%d.%m.%Y")
-        time_str = created_at.strftime("%H-%M")
-
-        safe_dept = re.sub(r'[<>:"/\\|?*]', '_', dept_name)[:40]
         filename = f"{patient.name}.docx"
         filepath = os.path.join(export_dir, filename)
 

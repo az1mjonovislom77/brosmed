@@ -8,6 +8,8 @@ from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, Repl
 import aiofiles
 from decouple import config
 
+from laboratory.utils import safe_filename
+
 BOT_TOKEN = config('BOT_TOKEN')
 
 CHECK_PATIENT_URL = "https://api.brosmed.uz/check-patient/"
@@ -165,7 +167,11 @@ async def handle_message(message: types.Message):
 
                     for file_info in files:
                         url = file_info["url"]
-                        filename = file_info["filename"]
+                        original_filename = file_info["filename"]
+
+                        ext = os.path.splitext(original_filename)[1] or ".docx"
+                        patient_name = safe_filename(state.get("patient_name", "patient"))
+                        filename = f"{patient_name}{ext}"
 
                         try:
                             async with httpx.AsyncClient(timeout=60) as client:
