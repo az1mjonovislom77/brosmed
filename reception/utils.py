@@ -42,11 +42,6 @@ class ExportAnalysisByPatientView(APIView):
 
         analysis_title = analysis.department_types.title.strip() if analysis.department_types and analysis.department_types.title else "Analiz"
 
-        class DummyAnalysis:
-            id = analysis_id
-            created_at = timezone.now()
-
-        analysis_obj = DummyAnalysis()
         timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
         out_name = f"analysis_{patient.id}_{timestamp}.docx"
         out_path = os.path.join(getattr(settings, 'MEDIA_ROOT', '/tmp'), out_name)
@@ -54,7 +49,7 @@ class ExportAnalysisByPatientView(APIView):
 
         create_analysis_docx(
             patient=patient,
-            analysis=analysis_obj,
+            analysis=analysis,
             results_list=results_list,
             output_path=out_path,
             header_image_path=header_image_path,
