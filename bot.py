@@ -103,6 +103,14 @@ async def handle_message(message: types.Message):
                     return
 
                 data = resp.json()
+
+                patient_data = data.get("patient", {})
+                full_name = (
+                    f"{patient_data.get('name', '')} "
+                    f"{patient_data.get('last_name', '')}"
+                ).strip()
+
+                state["patient_name"] = full_name if full_name else "patient"
                 departments = data.get("department_types", [])
 
                 if not departments:

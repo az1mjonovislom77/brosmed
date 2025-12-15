@@ -76,7 +76,7 @@ def check_patient(request):
     try:
         body = json.loads(request.body)
         raw_phone = body.get("phone", "").strip()
-    except:
+    except Exception:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     phone = normalize_phone(raw_phone)
@@ -111,9 +111,12 @@ def check_patient(request):
 
     return JsonResponse({
         "found": True,
+        "patient": {
+            "name": patient.name,
+            "last_name": patient.last_name
+        },
         "department_types": dept_types
     })
-
 
 @extend_schema(tags=['Analysis'])
 class AnalysisDetailByPatient(APIView):
