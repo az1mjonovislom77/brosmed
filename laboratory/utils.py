@@ -228,7 +228,7 @@ def export_analysis_by_phone(request):
         time_str = created_at.strftime("%H-%M")
 
         safe_dept = re.sub(r'[<>:"/\\|?*]', '_', dept_name)[:40]
-        filename = f"{safe_dept}_{date_str}_{time_str}.docx"
+        filename = f"{patient.name}.docx"
         filepath = os.path.join(export_dir, filename)
 
         results_list = []
