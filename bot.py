@@ -8,8 +8,6 @@ from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, Repl
 import aiofiles
 from decouple import config
 
-from laboratory.utils import safe_filename
-
 BOT_TOKEN = config('BOT_TOKEN')
 
 CHECK_PATIENT_URL = "https://api.brosmed.uz/check-patient/"
@@ -22,6 +20,13 @@ TEMP_DIR = "temp_bot_files"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 user_state = {}
+
+
+def safe_filename(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r'\s+', '_', value)
+    value = re.sub(r'[^a-z0-9_]', '', value)
+    return value
 
 
 def normalize_phone(phone: str) -> str:
