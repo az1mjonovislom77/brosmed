@@ -288,3 +288,10 @@ def export_analysis_by_phone(request):
         files_created.append({"filename": filename, "url": file_url})
 
     return JsonResponse({"files": files_created})
+
+
+def safe_filename(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r'\s+', '_', value)
+    value = re.sub(r'[^a-z0-9_]', '', value)
+    return value

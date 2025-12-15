@@ -43,7 +43,7 @@ class ExportAnalysisByPatientView(APIView):
         analysis_title = analysis.department_types.title.strip() if analysis.department_types and analysis.department_types.title else "Analiz"
 
         timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
-        out_name = f"analysis_{patient.id}_{timestamp}.docx"
+        out_name = f"analysis_{patient.name}.docx"
         out_path = os.path.join(getattr(settings, 'MEDIA_ROOT', '/tmp'), out_name)
         header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
 
