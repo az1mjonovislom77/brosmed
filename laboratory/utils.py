@@ -2,6 +2,7 @@ import os
 import re
 import json
 import logging
+import subprocess
 from django.http import JsonResponse
 from docx import Document
 from docx.shared import Pt, Inches
@@ -12,6 +13,29 @@ from bot import normalize_phone
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 from django.utils import timezone
+
+
+def safe_filename(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r'\s+', '_', value)
+    value = re.sub(r'[^a-z0-9_]', '', value)
+    return value
+
+
+def convert_docx_to_pdf(docx_path: str) -> str:
+    output_dir = os.path.dirname(docx_path)
+    subprocess.run(
+        [
+            "libreoffice",
+            "--headless",
+            "--convert-to", "pdf",
+            "--outdir", output_dir,
+            docx_path
+        ],
+        check=True
+    )
+
+    return docx_path.replace(".docx", ".pdf")
 
 
 def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
@@ -170,15 +194,14 @@ logger = logging.getLogger(__name__)
 def get_patient_by_phone(raw_phone):
     phone = normalize_phone(raw_phone)
     if not phone:
-        return None, "Invalid phone after normalization"
+        return None, "Invalid phone"
 
     patient = Patient.objects.filter(phone_number=phone).first()
     if patient:
         return patient, None
 
     for p in Patient.objects.exclude(phone_number__isnull=True).exclude(phone_number__exact=''):
-        normalized = normalize_phone(p.phone_number)
-        if normalized == phone:
+        if normalize_phone(p.phone_number) == phone:
             return p, None
 
     return None, "Patient not found"
@@ -198,15 +221,13 @@ def export_analysis_by_phone(request):
 
     patient, err = get_patient_by_phone(raw_phone)
     if err:
-        logger.info(f"Phone search failed: {raw_phone}, reason: {err}")
         return JsonResponse({"error": err}, status=404)
 
-    analyses_qs = Analysis.objects.filter(patient=patient)
-    if department_type_id and str(department_type_id).isdigit():
-        analyses_qs = analyses_qs.filter(department_types_id=int(department_type_id))
+    analyses = Analysis.objects.filter(patient=patient).order_by('-created_at')
+    if department_type_id:
+        analyses = analyses.filter(department_types_id=int(department_type_id))
 
-    analyses_qs = analyses_qs.order_by('-created_at')
-    if not analyses_qs.exists():
+    if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
@@ -218,76 +239,59 @@ def export_analysis_by_phone(request):
 
     files_created = []
 
-    for analysis in analyses_qs:
-        dept_name = "Umumiy"
-        if analysis.department_types and analysis.department_types.title:
-            dept_name = analysis.department_types.title.strip()
-
-        created_at = analysis.created_at
-        filename = f"{patient.name}.docx"
-        filepath = os.path.join(export_dir, filename)
+    for analysis in analyses:
+        base = safe_filename(patient.name)
+        docx_path = os.path.join(export_dir, f"{base}.docx")
 
         results_list = []
-        seen_titles = set()
-        time_window = timezone.timedelta(hours=2)
-        start_time = created_at - time_window
-        end_time = created_at + time_window
+        seen = set()
+        start = analysis.created_at - timezone.timedelta(hours=2)
+        end = analysis.created_at + timezone.timedelta(hours=2)
 
-        candidate_results = AnalysisResult.objects.filter(
+        qs = AnalysisResult.objects.filter(
             patient=patient,
-            created_at__gte=start_time,
-            created_at__lte=end_time
-        ).select_related('result').order_by('created_at')
+            created_at__gte=start,
+            created_at__lte=end
+        ).select_related('result')
 
-        for ar in candidate_results:
+        for ar in qs:
             if not ar.result or not ar.result.title:
                 continue
-
-            raw_value = ar.analysis_result
-            if raw_value is None:
+            if ar.result.title in seen:
                 continue
+            seen.add(ar.result.title)
 
-            value = str(raw_value).strip()
-            if value == "" or value.lower() in ["none", "null"]:
+            value = str(ar.analysis_result or "").strip()
+            if not value:
                 continue
-
-            title = ar.result.title.strip()
-            if title in seen_titles:
-                continue
-            seen_titles.add(title)
-
-            norma_raw = ar.result.norma
-            if norma_raw is None:
-                norma_value = ""
-            else:
-                norma_value = str(norma_raw).strip()
 
             results_list.append({
-                "title": title,
+                "title": ar.result.title.strip(),
                 "value": value,
-                "norma": norma_value
+                "norma": (ar.result.norma or "").strip()
             })
 
-        if not results_list:
-            results_list = [{'title': 'Natija hali kiritilmagan', 'value': '', 'norma': ''}]
-
         create_analysis_docx(
-            patient=patient,
-            analysis=analysis,
-            results_list=results_list,
-            output_path=filepath,
-            header_image_path=header_image_path,
-            analysis_title=f"{dept_name} natijasi"
+            patient,
+            analysis,
+            results_list,
+            docx_path,
+            header_image_path,
+            analysis_title=f"{analysis.department_types.title} natijasi"
         )
 
-        file_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{filename}")
-        files_created.append({"filename": filename, "url": file_url})
+        pdf_path = convert_docx_to_pdf(docx_path)
+
+        if os.path.exists(docx_path):
+            os.remove(docx_path)
+
+        pdf_url = request.build_absolute_uri(
+            f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
+        )
+
+        files_created.append({
+            "filename": os.path.basename(pdf_path),
+            "url": pdf_url
+        })
 
     return JsonResponse({"files": files_created})
-
-
-def safe_filename(value: str) -> str:
-    value = value.strip().lower()
-    value = re.sub(r'\s+', '_', value)
-    value = re.sub(r'[^a-z0-9_]', '', value)
-    return value

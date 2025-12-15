@@ -4,9 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from django.http import FileResponse
-from django.utils import timezone
 from django.conf import settings
-from laboratory.utils import create_analysis_docx
+from laboratory.utils import create_analysis_docx, convert_docx_to_pdf
 from .models import Patient, AnalysisResult, Analysis, User
 from .serializers import ExportAnalysisSerializer
 from drf_spectacular.utils import extend_schema
@@ -40,19 +39,31 @@ class ExportAnalysisByPatientView(APIView):
         if not results_list:
             results_list = [{'title': '', 'value': '', 'norma': ''}]
 
-        analysis_title = analysis.department_types.title.strip() if analysis.department_types and analysis.department_types.title else "Analiz"
+        analysis_title = (
+            analysis.department_types.title.strip() if analysis.department_types and analysis.department_types.title
+            else "Analiz"
+        )
 
-        out_name = f"{patient.name}.docx"
-        out_path = os.path.join(getattr(settings, 'MEDIA_ROOT', '/tmp'), out_name)
+        base_name = patient.name or "analysis"
+        docx_name = f"{base_name}.docx"
+        pdf_name = f"{base_name}.pdf"
+
+        export_dir = getattr(settings, 'MEDIA_ROOT', '/tmp')
+        docx_path = os.path.join(export_dir, docx_name)
+
         header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
 
         create_analysis_docx(
             patient=patient,
             analysis=analysis,
             results_list=results_list,
-            output_path=out_path,
+            output_path=docx_path,
             header_image_path=header_image_path,
             analysis_title=analysis_title
         )
 
-        return FileResponse(open(out_path, 'rb'), as_attachment=True, filename=out_name)
+        pdf_path = convert_docx_to_pdf(docx_path)
+
+        if os.path.exists(docx_path):
+            os.remove(docx_path)
+        return FileResponse(open(pdf_path, 'rb'), as_attachment=True, filename=pdf_name, content_type='application/pdf')
