@@ -54,7 +54,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         cell_img = table.cell(0, 0)
         p_img = cell_img.paragraphs[0]
         run_img = p_img.add_run()
-        run_img.add_picture(header_image_path, width=Inches(3))
+        run_img.add_picture(header_image_path, width=Inches(2))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
         cell_text = table.cell(0, 1)
