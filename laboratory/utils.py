@@ -54,7 +54,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         cell_img = table.cell(0, 0)
         p_img = cell_img.paragraphs[0]
         run_img = p_img.add_run()
-        run_img.add_picture(header_image_path, width=Inches(2))
+        run_img.add_picture(header_image_path, width=Inches(4))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
         cell_text = table.cell(0, 1)
@@ -68,18 +68,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         doc.add_paragraph()
 
-    title = doc.add_paragraph()
-    title_run = title.add_run("Brosmed Laboratoriya\n")
-    title_run.bold = True
-    title_run.font.size = Pt(14)
-    title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
-    subtitle_run.italic = True
-    subtitle_run.font.size = Pt(13)
-    subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    doc.add_paragraph()
-    doc.add_paragraph()
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = 'Table Grid'
     info_table.autofit = True
@@ -92,6 +80,13 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
     info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
                                                                                            None) else ""
+    subtitle = doc.add_paragraph()
+    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
+    subtitle_run.italic = True
+    subtitle_run.font.size = Pt(13)
+    subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    doc.add_paragraph()
+    doc.add_paragraph()
 
     doc.add_paragraph()
 
