@@ -244,21 +244,18 @@ def export_analysis_by_phone(request):
         end = analysis.created_at + timezone.timedelta(hours=2)
 
         qs = AnalysisResult.objects.filter(
-            patient=patient,
-            created_at__gte=start,
-            created_at__lte=end
-        ).select_related('result')
+            patient=patient
+        ).select_related('result').order_by('-created_at')[:50]
 
         for ar in qs:
             if not ar.result or not ar.result.title:
                 continue
-            if ar.result.title in seen:
-                continue
-            seen.add(ar.result.title)
 
-            value = str(ar.analysis_result or "").strip()
-            if not value:
+            value = ar.analysis_result
+            if value is None:
                 continue
+
+            value = str(value).strip()
 
             results_list.append({
                 "title": ar.result.title.strip(),
