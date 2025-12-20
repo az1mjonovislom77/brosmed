@@ -68,10 +68,18 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         doc.add_paragraph()
 
+    title = doc.add_paragraph()
+    title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    subtitle = doc.add_paragraph()
+    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
+    subtitle_run.italic = True
+    subtitle_run.font.size = Pt(13)
+    subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    doc.add_paragraph()
+    doc.add_paragraph()
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = 'Table Grid'
     info_table.autofit = True
-
     info_table.cell(0, 0).text = "Bemor I.F.O"
     info_table.cell(0, 1).text = f"{(patient.name or '')} {(patient.last_name or '')} {(patient.middle_name or '')}"
     info_table.cell(1, 0).text = "Tugilgan sanasi"
@@ -81,12 +89,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
     info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
                                                                                            None) else ""
-    doc.add_paragraph()
-    subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
-    subtitle_run.italic = True
-    subtitle_run.font.size = Pt(13)
-    subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     doc.add_paragraph()
 
@@ -244,8 +246,10 @@ def export_analysis_by_phone(request):
         end = analysis.created_at + timezone.timedelta(hours=2)
 
         qs = AnalysisResult.objects.filter(
-            patient=patient
-        ).select_related('result').order_by('-created_at')
+            patient=patient,
+            created_at__gte=start,
+            created_at__lte=end
+        ).select_related('result')
 
         for ar in qs:
             if not ar.result or not ar.result.title:
