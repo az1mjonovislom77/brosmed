@@ -114,8 +114,7 @@ def check_patient(request):
         "patient": {
             "name": patient.name,
             "last_name": patient.last_name
-        },
-        "department_types": dept_types
+        }, "department_types": dept_types
     })
 
 
