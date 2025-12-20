@@ -96,7 +96,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         if raw_value is None:
             continue
         value_str = str(raw_value).strip()
-        if not value_str or value_str.lower() in ['none', 'null', '']:
+        if value_str.lower() in ['none', 'null']:
             continue
 
         title = item.get('title', '').strip()
