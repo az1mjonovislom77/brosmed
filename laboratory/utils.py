@@ -96,7 +96,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         if raw_value is None:
             continue
         value_str = str(raw_value).strip()
-        if value_str.lower() in ['none', 'null']:
+        if not value_str or value_str.lower() in ['none', 'null', '']:
             continue
 
         title = item.get('title', '').strip()
@@ -245,17 +245,18 @@ def export_analysis_by_phone(request):
 
         qs = AnalysisResult.objects.filter(
             patient=patient
-        ).select_related('result').order_by('-created_at')[:50]
+        ).select_related('result').order_by('-created_at')
 
         for ar in qs:
             if not ar.result or not ar.result.title:
                 continue
-
-            value = ar.analysis_result
-            if value is None:
+            if ar.result.title in seen:
                 continue
+            seen.add(ar.result.title)
 
-            value = str(value).strip()
+            value = str(ar.analysis_result or "").strip()
+            if not value:
+                continue
 
             results_list.append({
                 "title": ar.result.title.strip(),
