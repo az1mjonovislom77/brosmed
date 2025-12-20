@@ -68,6 +68,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         doc.add_paragraph()
 
+    doc.add_paragraph()
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title}\n")
     subtitle_run.italic = True
