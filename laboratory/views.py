@@ -118,6 +118,7 @@ def check_patient(request):
         "department_types": dept_types
     })
 
+
 @extend_schema(tags=['Analysis'])
 class AnalysisDetailByPatient(APIView):
     serializer_class = AnalysisDetailInputSerializer
