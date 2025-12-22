@@ -240,27 +240,28 @@ def export_analysis_by_phone(request):
     files_created = []
 
     for analysis in analyses:
-        base = safe_filename(patient.name)
+        base = safe_filename(f"{patient.name}_{analysis.id}")
         docx_path = os.path.join(export_dir, f"{base}.docx")
 
         results_list = []
         seen = set()
-        start = analysis.created_at - timezone.timedelta(hours=2)
-        end = analysis.created_at + timezone.timedelta(hours=2)
+
         qs = AnalysisResult.objects.filter(
-            patient=patient
-        ).select_related('result').order_by('-created_at')
+            patient=patient,
+            created_at__lte=analysis.created_at
+        ).select_related('result').order_by('-created_at')[:50]
 
         for ar in qs:
             if not ar.result or not ar.result.title:
                 continue
+
+            value = (ar.analysis_result or "").strip()
+            if not value:
+                continue
+
             if ar.result.title in seen:
                 continue
             seen.add(ar.result.title)
-
-            value = str(ar.analysis_result or "").strip()
-            if not value:
-                continue
 
             results_list.append({
                 "title": ar.result.title.strip(),
@@ -268,16 +269,46 @@ def export_analysis_by_phone(request):
                 "norma": (ar.result.norma or "").strip()
             })
 
-        create_analysis_docx(patient, analysis, results_list, docx_path, header_image_path,
-                             analysis_title=f"{analysis.department_types.title} natijasi")
+        if not results_list:
+            qs = AnalysisResult.objects.filter(
+                patient=patient
+            ).select_related('result').order_by('-created_at')[:20]
+
+            for ar in qs:
+                if not ar.result or not ar.result.title:
+                    continue
+
+                value = (ar.analysis_result or "").strip()
+                if not value:
+                    continue
+
+                results_list.append({
+                    "title": ar.result.title.strip(),
+                    "value": value,
+                    "norma": (ar.result.norma or "").strip()
+                })
+
+        create_analysis_docx(
+            patient=patient,
+            analysis=analysis,
+            results_list=results_list,
+            output_path=docx_path,
+            header_image_path=header_image_path,
+            analysis_title=f"{analysis.department_types.title} natijasi"
+        )
 
         pdf_path = convert_docx_to_pdf(docx_path)
 
         if os.path.exists(docx_path):
             os.remove(docx_path)
 
-        pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}")
+        pdf_url = request.build_absolute_uri(
+            f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
+        )
 
-        files_created.append({"filename": os.path.basename(pdf_path), "url": pdf_url})
+        files_created.append({
+            "filename": os.path.basename(pdf_path),
+            "url": pdf_url
+        })
 
     return JsonResponse({"files": files_created})
