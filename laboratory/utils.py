@@ -247,12 +247,9 @@ def export_analysis_by_phone(request):
         seen = set()
         start = analysis.created_at - timezone.timedelta(hours=2)
         end = analysis.created_at + timezone.timedelta(hours=2)
-
         qs = AnalysisResult.objects.filter(
-            patient=patient,
-            created_at__gte=start,
-            created_at__lte=end
-        ).select_related('result')
+            patient=patient
+        ).order_by('-created_at')
 
         for ar in qs:
             if not ar.result or not ar.result.title:
