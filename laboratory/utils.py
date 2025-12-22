@@ -54,7 +54,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         cell_img = table.cell(0, 0)
         p_img = cell_img.paragraphs[0]
         run_img = p_img.add_run()
-        run_img.add_picture(header_image_path, width=Inches(3))
+        run_img.add_picture(header_image_path, width=Inches(2.5))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
         cell_text = table.cell(0, 1)
@@ -271,27 +271,16 @@ def export_analysis_by_phone(request):
                 "norma": (ar.result.norma or "").strip()
             })
 
-        create_analysis_docx(
-            patient,
-            analysis,
-            results_list,
-            docx_path,
-            header_image_path,
-            analysis_title=f"{analysis.department_types.title} natijasi"
-        )
+        create_analysis_docx(patient, analysis, results_list, docx_path, header_image_path,
+                             analysis_title=f"{analysis.department_types.title} natijasi")
 
         pdf_path = convert_docx_to_pdf(docx_path)
 
         if os.path.exists(docx_path):
             os.remove(docx_path)
 
-        pdf_url = request.build_absolute_uri(
-            f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
-        )
+        pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}")
 
-        files_created.append({
-            "filename": os.path.basename(pdf_path),
-            "url": pdf_url
-        })
+        files_created.append({"filename": os.path.basename(pdf_path), "url": pdf_url})
 
     return JsonResponse({"files": files_created})
