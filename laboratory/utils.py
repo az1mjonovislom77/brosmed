@@ -206,7 +206,6 @@ def get_patient_by_phone(raw_phone):
 
     return None, "Patient not found"
 
-
 @csrf_exempt
 def export_analysis_by_phone(request):
     logger.error("=== EXPORT STARTED ===")
@@ -220,7 +219,7 @@ def export_analysis_by_phone(request):
         raw_phone = body.get("phone", "").strip()
         department_type_id = body.get("department_type_id")
         logger.error(f"Request body: phone={raw_phone}, department_type_id={department_type_id}")
-    except Exception as e:
+    except Exception:
         logger.exception("JSON parse error")
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
@@ -232,35 +231,28 @@ def export_analysis_by_phone(request):
     logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
 
     analyses = Analysis.objects.filter(patient=patient).order_by('-created_at')
-    logger.error(f"Total analyses found: {analyses.count()}")
-
     if department_type_id:
         analyses = analyses.filter(department_types_id=int(department_type_id))
-        logger.error(f"Filtered by department_type_id, count={analyses.count()}")
+
+    logger.error(f"Total analyses found: {analyses.count()}")
 
     if not analyses.exists():
-        logger.error("No analysis found after filtering")
         return JsonResponse({"error": "No analysis found"}, status=404)
 
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
     os.makedirs(export_dir, exist_ok=True)
-    logger.error(f"Export dir: {export_dir}")
 
     header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
     if not os.path.exists(header_image_path):
         header_image_path = None
-        logger.error("Header image NOT FOUND")
-    else:
-        logger.error(f"Header image FOUND: {header_image_path}")
 
     files_created = []
 
     for analysis in analyses:
-        logger.error(f"--- PROCESSING ANALYSIS id={analysis.id}, created_at={analysis.created_at}")
+        logger.error(f"--- PROCESSING ANALYSIS id={analysis.id}")
 
         base = safe_filename(f"{patient.name}_{analysis.id}")
         docx_path = os.path.join(export_dir, f"{base}.docx")
-        logger.error(f"DOCX path: {docx_path}")
 
         results_list = []
         seen = set()
@@ -272,37 +264,25 @@ def export_analysis_by_phone(request):
         logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
 
         for ar in qs:
-            logger.error(
-                f"AR id={ar.id}, "
-                f"result_id={ar.result_id}, "
-                f"title={(ar.result.title if ar.result else None)}, "
-                f"value={ar.analysis_result}"
-            )
-
-            if not ar.result or not ar.result.title:
-                logger.error("SKIP: result or title missing")
-                continue
-
             value = (ar.analysis_result or "").strip()
             if not value:
-                logger.error("SKIP: analysis_result empty")
                 continue
 
-            if ar.result.title in seen:
-                logger.error(f"SKIP: duplicate title {ar.result.title}")
+
+            title = ar.result.title if ar.result and ar.result.title else "Analiz"
+            norma = ar.result.norma if ar.result and ar.result.norma else "-"
+
+            if title in seen:
                 continue
-            seen.add(ar.result.title)
+            seen.add(title)
 
             results_list.append({
-                "title": ar.result.title.strip(),
+                "title": title,
                 "value": value,
-                "norma": (ar.result.norma or "").strip()
+                "norma": norma
             })
 
         logger.error(f"FINAL results_list count: {len(results_list)}")
-
-        if not results_list:
-            logger.error("!!! RESULTS LIST IS EMPTY !!!")
 
         create_analysis_docx(
             patient=patient,
@@ -313,18 +293,10 @@ def export_analysis_by_phone(request):
             analysis_title=f"{analysis.department_types.title} natijasi"
         )
 
-        logger.error("DOCX created")
-
-        try:
-            pdf_path = convert_docx_to_pdf(docx_path)
-            logger.error(f"PDF created: {pdf_path}")
-        except Exception as e:
-            logger.exception("PDF CONVERT ERROR")
-            return JsonResponse({"error": "PDF convert failed"}, status=500)
+        pdf_path = convert_docx_to_pdf(docx_path)
 
         if os.path.exists(docx_path):
             os.remove(docx_path)
-            logger.error("DOCX deleted")
 
         pdf_url = request.build_absolute_uri(
             f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
