@@ -68,12 +68,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         doc.add_paragraph()
 
-
-    subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
-    subtitle_run.italic = True
-    subtitle_run.font.size = Pt(13)
-    subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     doc.add_paragraph()
     doc.add_paragraph()
     info_table = doc.add_table(rows=4, cols=2)
@@ -88,6 +82,11 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
     info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
                                                                                            None) else ""
+    subtitle = doc.add_paragraph()
+    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
+    subtitle_run.italic = True
+    subtitle_run.font.size = Pt(13)
+    subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     doc.add_paragraph()
 
@@ -202,6 +201,7 @@ def get_patient_by_phone(raw_phone):
 
     return None, "Patient not found"
 
+
 @csrf_exempt
 def export_analysis_by_phone(request):
     logger.error("=== EXPORT STARTED ===")
@@ -263,7 +263,6 @@ def export_analysis_by_phone(request):
             value = (ar.analysis_result or "").strip()
             if not value:
                 continue
-
 
             title = ar.result.title if ar.result and ar.result.title else "Analiz"
             norma = ar.result.norma if ar.result and ar.result.norma else "-"
