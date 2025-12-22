@@ -66,7 +66,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run_text.font.size = Pt(10)
         p_text.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
-        doc.add_paragraph()
 
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = 'Table Grid'
