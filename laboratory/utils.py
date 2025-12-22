@@ -68,11 +68,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         doc.add_paragraph()
 
-    title = doc.add_paragraph()
-    title_run = title.add_run("Brosmed Laboratoriya\n")
-    title_run.bold = True
-    title_run.font.size = Pt(14)
-    title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title}\n")
     subtitle_run.italic = True
