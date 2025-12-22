@@ -22,3 +22,8 @@ class AnalysisInline(admin.TabularInline):
 class PatientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'user')
     inlines = [AnalysisInline, ConsultationsInline, AnalysisResultInline]
+
+
+@admin.register(AnalysisResult)
+class AnalysisResult(admin.ModelAdmin):
+    list_display = ('id', 'analysis_result')
