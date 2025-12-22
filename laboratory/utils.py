@@ -68,8 +68,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         doc.add_paragraph()
 
-    doc.add_paragraph()
-    doc.add_paragraph()
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = 'Table Grid'
     info_table.autofit = True
