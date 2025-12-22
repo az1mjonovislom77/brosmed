@@ -249,7 +249,7 @@ def export_analysis_by_phone(request):
         end = analysis.created_at + timezone.timedelta(hours=2)
         qs = AnalysisResult.objects.filter(
             patient=patient
-        ).order_by('-created_at')
+        ).select_related('result').order_by('-created_at')
 
         for ar in qs:
             if not ar.result or not ar.result.title:
