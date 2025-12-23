@@ -12,7 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from bot import normalize_phone
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
-from django.utils import timezone
 
 
 def safe_filename(value: str) -> str:
@@ -66,7 +65,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run_text.font.size = Pt(10)
         p_text.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
-
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = 'Table Grid'
     info_table.autofit = True
@@ -84,8 +82,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
-    doc.add_paragraph()
 
     valid_results = []
     for item in results_list:
