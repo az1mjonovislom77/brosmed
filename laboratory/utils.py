@@ -145,7 +145,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     left_cell = sign_table.cell(0, 0)
     left_p = left_cell.paragraphs[0]
-    left_p.add_run("Врач:  ________________________________")
+    left_p.add_run("Врач:  ___________________________")
     left_p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     right_cell = sign_table.cell(0, 1)
