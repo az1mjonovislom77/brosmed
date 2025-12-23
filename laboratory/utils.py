@@ -42,14 +42,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         table.columns[1].width = Inches(3.5)
 
         cell_img = table.cell(0, 0)
-        tc = cell_img._tc
-        tcPr = tc.get_or_add_tcPr()
-        tcMar = tcPr.get_or_add_tcMar()
-        tcMar.left = None
-        tcMar.right = None
-        tcMar.top = None
-        tcMar.bottom = None
-
         p_img = cell_img.paragraphs[0]
         run_img = p_img.add_run()
         run_img.add_picture(header_image_path, width=Inches(2))
