@@ -43,11 +43,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         cell_img = table.cell(0, 0)
         p_img = cell_img.paragraphs[0]
-
-        p_img.paragraph_format.left_indent = Pt(-15)
-        p_img.paragraph_format.space_before = Pt(0)
-        p_img.paragraph_format.space_after = Pt(0)
-
         run_img = p_img.add_run()
         run_img.add_picture(header_image_path, width=Inches(2.5))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
