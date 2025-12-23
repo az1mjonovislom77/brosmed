@@ -134,8 +134,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
                         r.font.name = 'Times New Roman'
                         r.font.size = Pt(11)
 
-    doc.add_paragraph()
-
     dept = analysis.department_types.department
     user = dept.user_set.first()
     full_name = user.full_name if user else ""
