@@ -23,16 +23,7 @@ def safe_filename(value: str) -> str:
 
 def convert_docx_to_pdf(docx_path: str) -> str:
     output_dir = os.path.dirname(docx_path)
-    subprocess.run(
-        [
-            "libreoffice",
-            "--headless",
-            "--convert-to", "pdf",
-            "--outdir", output_dir,
-            docx_path
-        ],
-        check=True
-    )
+    subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, docx_path], check=True)
 
     return docx_path.replace(".docx", ".pdf")
 
@@ -51,9 +42,17 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         table.columns[1].width = Inches(3.5)
 
         cell_img = table.cell(0, 0)
+        tc = cell_img._tc
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = tcPr.get_or_add_tcMar()
+        tcMar.left = None
+        tcMar.right = None
+        tcMar.top = None
+        tcMar.bottom = None
+
         p_img = cell_img.paragraphs[0]
         run_img = p_img.add_run()
-        run_img.add_picture(header_image_path, width=Inches(2.5))
+        run_img.add_picture(header_image_path, width=Inches(2))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
         cell_text = table.cell(0, 1)

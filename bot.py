@@ -42,10 +42,7 @@ def normalize_phone(phone: str) -> str:
 
 def main_menu_kb():
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Yangi raqam kiritish")],
-            [KeyboardButton(text="Yana tahlil olish")]
-        ],
+        keyboard=[[KeyboardButton(text="Yangi raqam kiritish")], [KeyboardButton(text="Yana tahlil olish")]],
         resize_keyboard=True
     )
 
@@ -58,11 +55,9 @@ def departments_kb(departments):
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     user_state[message.chat.id] = {"step": "phone"}
-    await message.answer(
-        "Assalomu alaykum!\n\n"
-        "Telefon raqamingizni kiriting (masalan: +998901234567):\n",
-        reply_markup=ReplyKeyboardRemove()
-    )
+    await message.answer("Assalomu alaykum!\n\n"
+                         "Telefon raqamingizni kiriting (masalan: +998901234567):\n",
+                         reply_markup=ReplyKeyboardRemove())
 
 
 @dp.message()
@@ -110,11 +105,7 @@ async def handle_message(message: types.Message):
                 data = resp.json()
 
                 patient_data = data.get("patient", {})
-                full_name = (
-                    f"{patient_data.get('name', '')} "
-                    f"{patient_data.get('last_name', '')}"
-                ).strip()
-
+                full_name = (f"{patient_data.get('name', '')} "f"{patient_data.get('last_name', '')}").strip()
                 state["patient_name"] = full_name if full_name else "patient"
                 departments = data.get("department_types", [])
 
@@ -126,10 +117,7 @@ async def handle_message(message: types.Message):
                 state["departments"] = departments
                 state["step"] = "choose_department"
 
-                await message.answer(
-                    f"Bemor topildi!\n\nMavjud bo‘limlar:",
-                    reply_markup=departments_kb(departments)
-                )
+                await message.answer(f"Bemor topildi!\n\nMavjud bo‘limlar:", reply_markup=departments_kb(departments))
 
         except Exception as e:
             print("Check patient xato:", e)
@@ -151,23 +139,15 @@ async def handle_message(message: types.Message):
         state["selected_dept"] = selected
         state["step"] = "sending_files"
 
-        await message.answer(
-            f"{text} bo‘limi tanlandi.\nFayllar tayyorlanmoqda...",
-            reply_markup=ReplyKeyboardRemove()
-        )
+        await message.answer(f"{text} bo‘limi tanlandi.\nFayllar tayyorlanmoqda...", reply_markup=ReplyKeyboardRemove())
 
         try:
             async with httpx.AsyncClient(timeout=60) as client:
-                resp = await client.post(
-                    EXPORT_ANALYSIS_URL,
-                    json={
-                        "phone": state["phone"],
-                        "department_type_id": selected["id"]
-                    }
-                )
+                resp = await client.post(EXPORT_ANALYSIS_URL,
+                                         json={"phone": state["phone"], "department_type_id": selected["id"]})
 
                 if resp.status_code != 200:
-                    await message.answer("Tahlil fayllari topilmadi yoki xatolik yuz berdi.")
+                    await message.answer("Tahlil fayllari topilmadi.")
                     state["step"] = "choose_department"
                     return
 
@@ -194,10 +174,7 @@ async def handle_message(message: types.Message):
                                     async with aiofiles.open(temp_path, "wb") as f:
                                         await f.write(r.content)
 
-                                    await message.answer_document(
-                                        FSInputFile(temp_path),
-                                        caption=f"{filename}"
-                                    )
+                                    await message.answer_document(FSInputFile(temp_path), caption=f"{filename}")
                                     os.remove(temp_path)
                                     await asyncio.sleep(1.2)
                         except Exception as e:
