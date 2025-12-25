@@ -27,10 +27,12 @@ class DepartmentViewSet(PartialPutMixin, viewsets.ModelViewSet):
 
 @extend_schema(tags=['Result'])
 class ResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
-    queryset = Result.objects.all()
     serializer_class = ResultSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
+
+    def get_queryset(self):
+        return Result.objects.all().order_by('id')
 
 
 @extend_schema(tags=['AnalysisResult'])
