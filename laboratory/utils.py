@@ -27,13 +27,23 @@ def convert_docx_to_pdf(docx_path: str) -> str:
 
     return docx_path.replace(".docx", ".pdf")
 
+
 def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
                          analysis_title="Analiz"):
     doc = Document()
+
+    # --- Sahifa joyini kengaytiramiz (bir varaqga sig‘ishi uchun) ---
+    section = doc.sections[0]
+    section.top_margin = Inches(0.4)
+    section.bottom_margin = Inches(0.4)
+    section.left_margin = Inches(0.5)
+    section.right_margin = Inches(0.5)
+
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
     style._element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
     style.font.size = Pt(11)
+
     if header_image_path and os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
@@ -108,12 +118,13 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run.font.size = Pt(12)
         run.font.name = 'Times New Roman'
     else:
+        # --- KENG, BIR SAHIFAGA SIG'ADIGAN JADVAL ---
         table = doc.add_table(rows=1, cols=3, style='Table Grid')
         table.autofit = False
 
-        table.columns[0].width = Inches(3.5)   # Tahlil nomi — kengroq
-        table.columns[1].width = Inches(2.2)   # Natija
-        table.columns[2].width = Inches(2.0)   # Norma
+        table.columns[0].width = Inches(3.9)   # Tahlil nomi — keng
+        table.columns[1].width = Inches(1.9)   # Natija
+        table.columns[2].width = Inches(1.9)   # Norma
 
         hdr = table.rows[0].cells
         hdr[0].text = "Tahlil nomi"
@@ -131,11 +142,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
                     for run in paragraph.runs:
                         run.font.name = 'Times New Roman'
-                        run.font.size = Pt(11)
-                    if not paragraph.runs:
-                        r = paragraph.add_run(paragraph.text)
-                        r.font.name = 'Times New Roman'
-                        r.font.size = Pt(11)
+                        run.font.size = Pt(10)  # ixcham shrift
 
     dept = analysis.department_types.department
     user = dept.user_set.first()
@@ -166,6 +173,9 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     doc.save(output_path)
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_patient_by_phone(raw_phone):
