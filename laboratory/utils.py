@@ -27,7 +27,6 @@ def convert_docx_to_pdf(docx_path: str) -> str:
 
     return docx_path.replace(".docx", ".pdf")
 
-
 def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
                          analysis_title="Analiz"):
     doc = Document()
@@ -66,8 +65,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     info_table.cell(2, 0).text = "Telefon raqami"
     info_table.cell(2, 1).text = patient.phone_number or ""
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
-    info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
-                                                                                           None) else ""
+    info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at', None) else ""
+
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title}\n")
     subtitle_run.italic = True
@@ -110,7 +109,11 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run.font.name = 'Times New Roman'
     else:
         table = doc.add_table(rows=1, cols=3, style='Table Grid')
-        table.autofit = True
+        table.autofit = False
+
+        table.columns[0].width = Inches(3.5)   # Tahlil nomi — kengroq
+        table.columns[1].width = Inches(2.2)   # Natija
+        table.columns[2].width = Inches(2.0)   # Norma
 
         hdr = table.rows[0].cells
         hdr[0].text = "Tahlil nomi"
@@ -163,9 +166,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         p.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
 
     doc.save(output_path)
-
-
-logger = logging.getLogger(__name__)
 
 
 def get_patient_by_phone(raw_phone):
