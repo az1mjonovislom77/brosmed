@@ -34,6 +34,8 @@ class Result(models.Model):
     title = models.CharField(null=True, blank=True, max_length=500)
     norma = models.CharField(null=True, blank=True, max_length=500)
 
+    class Meta:
+        ordering = ['id']
+
     def __str__(self):
         return self.title
-

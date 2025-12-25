@@ -11,7 +11,7 @@ from user.views.user_views import PartialPutMixin
 
 @extend_schema(tags=['DepartmentTypes'])
 class DepartmentTypesViewSet(PartialPutMixin, viewsets.ModelViewSet):
-    queryset = DepartmentTypes.objects.all()
+    queryset = DepartmentTypes.objects.all().order_by('id')
     serializer_class = DepartmentTypesSerializer
     http_method_names = ['get', 'post', 'put', 'delete']
     permission_classes = [IsAuthenticated]
@@ -19,7 +19,7 @@ class DepartmentTypesViewSet(PartialPutMixin, viewsets.ModelViewSet):
 
 @extend_schema(tags=['Department'])
 class DepartmentViewSet(PartialPutMixin, viewsets.ModelViewSet):
-    queryset = Department.objects.all()
+    queryset = Department.objects.all().order_by('id')
     serializer_class = DepartmentSerializer
     http_method_names = ['get', 'post', 'put', 'delete']
     permission_classes = [IsAuthenticated]
@@ -37,7 +37,7 @@ class ResultViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
 @extend_schema(tags=['AnalysisResult'])
 class AnalysisResultViewSet(viewsets.ModelViewSet):
-    queryset = AnalysisResult.objects.all()
+    queryset = AnalysisResult.objects.all().order_by('id')
     serializer_class = AnalysisResultCreateSerializer
 
     def create(self, request, *args, **kwargs):
