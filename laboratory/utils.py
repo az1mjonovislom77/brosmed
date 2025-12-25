@@ -131,7 +131,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         hdr[1].text = "Tahlil natijasi"
         hdr[2].text = "Norma"
 
-        for item in valid_results:
+        for item in reversed(valid_results):
             row = table.add_row().cells
             row[0].text = item['title']
             row[1].text = item['value']
