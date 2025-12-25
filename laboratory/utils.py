@@ -236,8 +236,9 @@ def export_analysis_by_phone(request):
         seen = set()
 
         qs = AnalysisResult.objects.filter(
-            analysis=analysis
-        ).select_related('result').order_by('-created_at')
+            patient=patient,
+            result__department_type=analysis.department_types
+        ).select_related("result").order_by("-created_at")
 
         logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
 
