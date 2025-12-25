@@ -102,6 +102,7 @@ class AnalysisFile(models.Model):
 
 
 class AnalysisResult(models.Model):
+    analysis = models.ForeignKey(Analysis, null=True, blank=True, on_delete=models.CASCADE, related_name="results")
     result = models.ForeignKey(Result, null=True, blank=True, on_delete=models.SET_NULL, related_name='analysis_result')
     patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
     analysis_result = models.CharField(max_length=100, null=True, blank=True)

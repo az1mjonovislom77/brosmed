@@ -236,7 +236,6 @@ def export_analysis_by_phone(request):
         seen = set()
 
         qs = AnalysisResult.objects.filter(
-            patient=patient,
             analysis=analysis
         ).select_related('result').order_by('-created_at')
 
