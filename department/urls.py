@@ -5,7 +5,7 @@ from department.views import DepartmentViewSet, DepartmentTypesViewSet, ResultVi
 router = DefaultRouter()
 router.register('department', DepartmentViewSet)
 router.register('department_types', DepartmentTypesViewSet)
-router.register('result', ResultViewSet)
+router.register('result', ResultViewSet, basename='result')
 router.register('analysis_result', AnalysisResultViewSet)
 
 urlpatterns = [
