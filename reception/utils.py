@@ -20,15 +20,33 @@ class ExportAnalysisByPatientView(APIView):
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         patient_id = serializer.validated_data['patient_id']
         analysis_id = serializer.validated_data['analysis_id']
+
         patient = Patient.objects.filter(id=patient_id).first()
         if not patient:
             return Response({"error": "Patient not found"}, status=status.HTTP_404_NOT_FOUND)
+
         analysis = Analysis.objects.filter(id=analysis_id, patient_id=patient_id).first()
         if not analysis:
             return Response({"error": "Analysis not found for this patient"}, status=status.HTTP_404_NOT_FOUND)
-        results_qs = AnalysisResult.objects.filter(patient=patient).select_related('result').order_by('-created_at')
+
+        next_analysis = Analysis.objects.filter(
+            patient=patient,
+            department_types=analysis.department_types,
+            created_at__gt=analysis.created_at
+        ).order_by("created_at").first()
+
+        results_qs = AnalysisResult.objects.filter(
+            patient=patient,
+            result__department_types=analysis.department_types,
+            created_at__gte=analysis.created_at
+        ).select_related('result').order_by('-created_at')
+
+        if next_analysis:
+            results_qs = results_qs.filter(created_at__lt=next_analysis.created_at)
+
         results_list = []
         for ar in results_qs:
             title = ar.result.title if ar.result else f"[Noma'lum {ar.id}]"
@@ -40,7 +58,8 @@ class ExportAnalysisByPatientView(APIView):
             results_list = [{'title': '', 'value': '', 'norma': ''}]
 
         analysis_title = (
-            analysis.department_types.title.strip() if analysis.department_types and analysis.department_types.title
+            analysis.department_types.title.strip()
+            if analysis.department_types and analysis.department_types.title
             else "Analiz"
         )
 
@@ -66,4 +85,10 @@ class ExportAnalysisByPatientView(APIView):
 
         if os.path.exists(docx_path):
             os.remove(docx_path)
-        return FileResponse(open(pdf_path, 'rb'), as_attachment=True, filename=pdf_name, content_type='application/pdf')
+
+        return FileResponse(
+            open(pdf_path, 'rb'),
+            as_attachment=True,
+            filename=pdf_name,
+            content_type='application/pdf'
+        )
