@@ -29,7 +29,7 @@ class Patient(models.Model):
     middle_name = models.CharField(max_length=100, null=True, blank=True)
     gender = models.CharField(max_length=100, choices=GenderChoice.choices, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
-    phone_number = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=100, null=True, blank=True, unique=True)
     self_disease = models.TextField(max_length=100, null=True, blank=True)
     passport = models.CharField(max_length=100, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
