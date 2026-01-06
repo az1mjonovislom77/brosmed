@@ -13,13 +13,6 @@ from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 
 
-def safe_filename(value: str) -> str:
-    value = value.strip().lower()
-    value = re.sub(r'\s+', '_', value)
-    value = re.sub(r'[^a-z0-9_]', '', value)
-    return value
-
-
 def convert_docx_to_pdf(docx_path: str) -> str:
     output_dir = os.path.dirname(docx_path)
     subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, docx_path], check=True)
@@ -31,7 +24,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
                          analysis_title="Analiz"):
     doc = Document()
 
-    # --- Sahifa joyini kengaytiramiz (bir varaqga sig‘ishi uchun) ---
     section = doc.sections[0]
     section.top_margin = Inches(0.4)
     section.bottom_margin = Inches(0.4)
@@ -177,8 +169,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 logger = logging.getLogger(__name__)
 
 
-
-
 @csrf_exempt
 def export_analysis_by_phone(request):
     logger.error("=== EXPORT STARTED ===")
@@ -233,7 +223,7 @@ def export_analysis_by_phone(request):
             getattr(patient, "middle_name", "")
         ])).strip()
 
-        base = safe_filename(f"{full_name}_{analysis.id}")
+        base = f"{full_name}_{analysis.id}"
         docx_path = os.path.join(export_dir, f"{base}.docx")
 
         results_list = []
