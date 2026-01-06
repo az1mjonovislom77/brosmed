@@ -119,13 +119,12 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run.font.size = Pt(12)
         run.font.name = 'Times New Roman'
     else:
-        # --- KENG, BIR SAHIFAGA SIG'ADIGAN JADVAL ---
         table = doc.add_table(rows=1, cols=3, style='Table Grid')
         table.autofit = False
 
-        table.columns[0].width = Inches(3.9)  # Tahlil nomi — keng
-        table.columns[1].width = Inches(1.9)  # Natija
-        table.columns[2].width = Inches(1.9)  # Norma
+        table.columns[0].width = Inches(3.9)
+        table.columns[1].width = Inches(1.9)
+        table.columns[2].width = Inches(1.9)
 
         hdr = table.rows[0].cells
         hdr[0].text = "Tahlil nomi"
