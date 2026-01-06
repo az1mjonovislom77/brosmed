@@ -227,7 +227,13 @@ def export_analysis_by_phone(request):
     for analysis in analyses:
         logger.error(f"--- PROCESSING ANALYSIS id={analysis.id}")
 
-        base = safe_filename(f"{patient.name}_{analysis.id}")
+        full_name = " ".join(filter(None, [
+            patient.name,
+            patient.last_name,
+            getattr(patient, "middle_name", "")
+        ])).strip()
+
+        base = safe_filename(f"{full_name}_{analysis.id}")
         docx_path = os.path.join(export_dir, f"{base}.docx")
 
         results_list = []
