@@ -217,13 +217,7 @@ def export_analysis_by_phone(request):
     for analysis in analyses:
         logger.error(f"--- PROCESSING ANALYSIS id={analysis.id}")
 
-        full_name = " ".join(filter(None, [
-            patient.name,
-            patient.last_name,
-            getattr(patient, "middle_name", "")
-        ])).strip()
-
-        base = f"{full_name}_{analysis.id}"
+        base = f"{patient.name}_{analysis.id}"
         docx_path = os.path.join(export_dir, f"{base}.docx")
 
         results_list = []
@@ -256,16 +250,6 @@ def export_analysis_by_phone(request):
 
         logger.error(f"FINAL results_list count: {len(results_list)}")
 
-        full_name = " ".join(filter(None, [
-            patient.name,
-            patient.last_name,
-            getattr(patient, "middle_name", "")
-        ])).strip()
-
-        base = f"{full_name}_{analysis.id}"
-
-        docx_path = os.path.join(export_dir, f"{base}.docx")
-
         create_analysis_docx(
             patient=patient,
             analysis=analysis,
@@ -276,21 +260,16 @@ def export_analysis_by_phone(request):
         )
 
         pdf_path = convert_docx_to_pdf(docx_path)
-        custom_pdf_name = f"{base}.pdf"
-
-        final_pdf_path = os.path.join(export_dir, custom_pdf_name)
-        if pdf_path != final_pdf_path:
-            os.replace(pdf_path, final_pdf_path)
 
         if os.path.exists(docx_path):
             os.remove(docx_path)
 
         pdf_url = request.build_absolute_uri(
-            f"{settings.MEDIA_URL}temp_exports/{custom_pdf_name}"
+            f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
         )
 
         files_created.append({
-            "filename": custom_pdf_name,
+            "filename": os.path.basename(pdf_path),
             "url": pdf_url
         })
 
