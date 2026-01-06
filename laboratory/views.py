@@ -75,23 +75,16 @@ def check_patient(request):
 
     try:
         body = json.loads(request.body)
-        raw_phone = body.get("phone", "").strip()
+        patient_id = body.get("patient_id")
     except Exception:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    phone = normalize_phone(raw_phone)
-    if not phone:
-        return JsonResponse({"error": "Invalid phone"}, status=400)
+    if not patient_id:
+        return JsonResponse({"error": "patient_id required"}, status=400)
 
-    patient = Patient.objects.filter(phone_number=phone).first()
-
-    if not patient:
-        for p in Patient.objects.all():
-            if normalize_phone(p.phone_number) == phone:
-                patient = p
-                break
-
-    if not patient:
+    try:
+        patient = Patient.objects.get(id=int(patient_id))
+    except Patient.DoesNotExist:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
     dept_types = []

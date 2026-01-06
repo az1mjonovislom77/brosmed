@@ -29,20 +29,12 @@ def safe_filename(value: str) -> str:
     return value
 
 
-def normalize_phone(phone: str) -> str:
-    digits = re.sub(r"\D", "", phone.strip())
-    if digits.startswith("998") and len(digits) == 12:
-        digits = digits[3:]
-    if len(digits) == 9:
-        return "+998" + digits
-    if len(digits) == 12 and digits.startswith("998"):
-        return "+998" + digits[3:]
-    return phone
-
-
 def main_menu_kb():
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="Yangi raqam kiritish")], [KeyboardButton(text="Yana tahlil olish")]],
+        keyboard=[
+            [KeyboardButton(text="Yangi ID kiritish")],
+            [KeyboardButton(text="Yana tahlil olish")]
+        ],
         resize_keyboard=True
     )
 
@@ -54,10 +46,12 @@ def departments_kb(departments):
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    user_state[message.chat.id] = {"step": "phone"}
-    await message.answer("Assalomu alaykum!\n\n"
-                         "Telefon raqamingizni kiriting (masalan: +998901234567):\n",
-                         reply_markup=ReplyKeyboardRemove())
+    user_state[message.chat.id] = {"step": "patient_id"}
+    await message.answer(
+        "Assalomu alaykum!\n\n"
+        "Bemor ID raqamini kiriting (masalan: 12547):",
+        reply_markup=ReplyKeyboardRemove()
+    )
 
 
 @dp.message()
@@ -66,85 +60,96 @@ async def handle_message(message: types.Message):
     text = message.text.strip()
 
     if chat_id not in user_state:
-        user_state[chat_id] = {"step": "phone"}
+        user_state[chat_id] = {"step": "patient_id"}
 
     state = user_state[chat_id]
 
-    if text == "Yangi raqam kiritish":
-        user_state[chat_id] = {"step": "phone"}
-        await message.answer("Yangi telefon raqam kiriting:", reply_markup=ReplyKeyboardRemove())
+    if text == "Yangi ID kiritish":
+        user_state[chat_id] = {"step": "patient_id"}
+        await message.answer("Yangi bemor ID kiriting:", reply_markup=ReplyKeyboardRemove())
         return
 
     if text == "Yana tahlil olish":
-        if "phone" not in state or "departments" not in state:
-            await message.answer("Avval telefon raqam kiriting.")
+        if "patient_id" not in state or "departments" not in state:
+            await message.answer("Avval bemor ID kiritishingiz kerak.")
             return
         state["step"] = "choose_department"
         await message.answer("Bo‘lim tanlang:", reply_markup=departments_kb(state["departments"]))
         return
 
-    if state["step"] == "phone":
-        clean_phone = normalize_phone(text)
-        if not clean_phone.startswith("+998") or len(clean_phone) != 13:
-            await message.answer("Iltimos telefon raqamni to‘g‘ri kiriting.\nMasalan: +998901234567")
+    if state["step"] == "patient_id":
+        if not text.isdigit():
+            await message.answer("ID faqat raqamlardan iborat bo‘lishi kerak. Qayta kiriting.")
             return
 
-        state["phone"] = clean_phone
+        state["patient_id"] = int(text)
         state["step"] = "checking_patient"
         await message.answer("Tekshirilmoqda...")
 
         try:
             async with httpx.AsyncClient(timeout=15) as client:
-                resp = await client.post(CHECK_PATIENT_URL, json={"phone": clean_phone})
+                resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": state["patient_id"]})
+
                 if resp.status_code != 200:
-                    await message.answer('''Ushbu raqam egasiga tegishli tahlil natijalari mavjud emas.''')
-                    del state["phone"]
-                    state["step"] = "phone"
+                    await message.answer("Ushbu ID bo‘yicha bemor topilmadi.")
+                    del state["patient_id"]
+                    state["step"] = "patient_id"
                     return
 
                 data = resp.json()
 
                 patient_data = data.get("patient", {})
-                full_name = (f"{patient_data.get('name', '')} "f"{patient_data.get('last_name', '')}").strip()
+                full_name = (
+                    f"{patient_data.get('name', '')} "
+                    f"{patient_data.get('last_name', '')}"
+                ).strip()
+
                 state["patient_name"] = full_name if full_name else "patient"
                 departments = data.get("department_types", [])
 
                 if not departments:
-                    await message.answer("Bu bemorda hech qanday tahlil topilmadi.")
-                    state["step"] = "phone"
+                    await message.answer("Bu bemorda tahlil topilmadi.")
+                    state["step"] = "patient_id"
                     return
 
                 state["departments"] = departments
                 state["step"] = "choose_department"
 
-                await message.answer(f"Bemor topildi!\n\nMavjud bo‘limlar:", reply_markup=departments_kb(departments))
+                await message.answer(
+                    f"Bemor topildi: {state['patient_name']}\n\nMavjud bo‘limlar:",
+                    reply_markup=departments_kb(departments)
+                )
 
         except Exception as e:
             print("Check patient xato:", e)
             await message.answer("Server bilan bog‘lanishda xatolik. Qayta urining.")
-            state["step"] = "phone"
+            state["step"] = "patient_id"
         return
 
     if state["step"] == "choose_department":
-        selected = None
-        for dept in state["departments"]:
-            if dept["title"] == text:
-                selected = dept
-                break
+        selected = next((d for d in state["departments"] if d["title"] == text), None)
 
         if not selected:
-            await message.answer("Iltimos, ro‘yxatdan tanlang.")
+            await message.answer("Iltimos, ro‘yxatdan bo‘lim tanlang.")
             return
 
         state["selected_dept"] = selected
         state["step"] = "sending_files"
 
-        await message.answer(f"{text} bo‘limi tanlandi.\nFayllar tayyorlanmoqda...", reply_markup=ReplyKeyboardRemove())
+        await message.answer(
+            f"{text} bo‘limi tanlandi.\nFayllar tayyorlanmoqda...",
+            reply_markup=ReplyKeyboardRemove()
+        )
 
         try:
             async with httpx.AsyncClient(timeout=60) as client:
-                resp = await client.post(EXPORT_ANALYSIS_URL,
-                                         json={"phone": state["phone"], "department_type_id": selected["id"]})
+                resp = await client.post(
+                    EXPORT_ANALYSIS_URL,
+                    json={
+                        "patient_id": state["patient_id"],
+                        "department_type_id": selected["id"]
+                    }
+                )
 
                 if resp.status_code != 200:
                     await message.answer("Tahlil fayllari topilmadi.")
@@ -174,10 +179,10 @@ async def handle_message(message: types.Message):
                                     async with aiofiles.open(temp_path, "wb") as f:
                                         await f.write(r.content)
 
-                                    await message.answer_document(FSInputFile(temp_path), caption=f"{filename}")
+                                    await message.answer_document(FSInputFile(temp_path), caption=filename)
                                     os.remove(temp_path)
                                     await asyncio.sleep(1.2)
-                        except Exception as e:
+                        except:
                             await message.answer(f"Fayl yuborishda xato: {filename}")
 
                     await message.answer("Barcha tahlillar yuborildi!", reply_markup=main_menu_kb())

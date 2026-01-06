@@ -75,7 +75,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     info_table.cell(2, 0).text = "Telefon raqami"
     info_table.cell(2, 1).text = patient.phone_number or ""
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
-    info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at', None) else ""
+    info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
+                                                                                           None) else ""
 
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title}\n")
@@ -122,9 +123,9 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         table = doc.add_table(rows=1, cols=3, style='Table Grid')
         table.autofit = False
 
-        table.columns[0].width = Inches(3.9)   # Tahlil nomi — keng
-        table.columns[1].width = Inches(1.9)   # Natija
-        table.columns[2].width = Inches(1.9)   # Norma
+        table.columns[0].width = Inches(3.9)  # Tahlil nomi — keng
+        table.columns[1].width = Inches(1.9)  # Natija
+        table.columns[2].width = Inches(1.9)  # Norma
 
         hdr = table.rows[0].cells
         hdr[0].text = "Tahlil nomi"
@@ -199,22 +200,25 @@ def export_analysis_by_phone(request):
     logger.error("=== EXPORT STARTED ===")
 
     if request.method != "POST":
-        logger.error("Request method is not POST")
         return JsonResponse({"error": "Only POST"}, status=405)
 
     try:
         body = json.loads(request.body)
-        raw_phone = body.get("phone", "").strip()
+        patient_id = body.get("patient_id")
         department_type_id = body.get("department_type_id")
-        logger.error(f"Request body: phone={raw_phone}, department_type_id={department_type_id}")
+        logger.error(f"Request body: patient_id={patient_id}, department_type_id={department_type_id}")
     except Exception:
         logger.exception("JSON parse error")
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    patient, err = get_patient_by_phone(raw_phone)
-    if err:
-        logger.error(f"Patient error: {err}")
-        return JsonResponse({"error": err}, status=404)
+    if not patient_id:
+        return JsonResponse({"error": "patient_id required"}, status=400)
+
+    try:
+        patient = Patient.objects.get(id=int(patient_id))
+    except Patient.DoesNotExist:
+        logger.error("Patient not found")
+        return JsonResponse({"error": "Patient not found"}, status=404)
 
     logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
 
