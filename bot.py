@@ -22,11 +22,6 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 user_state = {}
 
 
-def safe_filename(value: str) -> str:
-    value = value.strip().lower()
-    value = re.sub(r'\s+', '_', value)
-    value = re.sub(r'[^a-z0-9_]', '', value)
-    return value
 
 
 def main_menu_kb():
@@ -168,7 +163,7 @@ async def handle_message(message: types.Message):
                         original_filename = file_info["filename"]
 
                         ext = os.path.splitext(original_filename)[1] or ".docx"
-                        patient_name = safe_filename(state.get("patient_name", "patient"))
+                        patient_name = state.get("patient_name", "patient")
                         filename = f"{patient_name}{ext}"
 
                         try:
