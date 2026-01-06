@@ -86,6 +86,16 @@ def check_patient(request):
     except Patient.DoesNotExist:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
+
+    full_name = " ".join(filter(None, [
+        getattr(patient, "name", ""),
+        getattr(patient, "last_name", ""),
+        getattr(patient, "middle_name", "")
+    ])).strip()
+
+    if not full_name:
+        full_name = f"patient_{patient.id}"  # fallback
+
     dept_types = []
     departments = Department.objects.filter(patient=patient)
     seen = set()
@@ -104,9 +114,13 @@ def check_patient(request):
     return JsonResponse({
         "found": True,
         "patient": {
-            "name": patient.name,
-            "last_name": patient.last_name
-        }, "department_types": dept_types
+            "id": patient.id,
+            "full_name": full_name,
+            "name": getattr(patient, "name", ""),
+            "last_name": getattr(patient, "last_name", ""),
+            "middle_name": getattr(patient, "middle_name", "")
+        },
+        "department_types": dept_types
     })
 
 
