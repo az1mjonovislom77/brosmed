@@ -4,7 +4,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from bot import normalize_phone
 from department.models import Department
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
     AnalysisFullDetailSerializer, AnalysisDetailInputSerializer

@@ -9,7 +9,6 @@ from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from django.views.decorators.csrf import csrf_exempt
-from bot import normalize_phone
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 
@@ -178,20 +177,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 logger = logging.getLogger(__name__)
 
 
-def get_patient_by_phone(raw_phone):
-    phone = normalize_phone(raw_phone)
-    if not phone:
-        return None, "Invalid phone"
-
-    patient = Patient.objects.filter(phone_number=phone).first()
-    if patient:
-        return patient, None
-
-    for p in Patient.objects.exclude(phone_number__isnull=True).exclude(phone_number__exact=''):
-        if normalize_phone(p.phone_number) == phone:
-            return p, None
-
-    return None, "Patient not found"
 
 
 @csrf_exempt
