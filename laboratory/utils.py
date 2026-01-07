@@ -179,8 +179,7 @@ def export_analysis_by_phone(request):
     try:
         body = json.loads(request.body)
         patient_id = body.get("patient_id")
-        department_type_id = body.get("department_type_id")
-        logger.error(f"Request body: patient_id={patient_id}, department_type_id={department_type_id}")
+        logger.error(f"Request body: patient_id={patient_id}")
     except Exception:
         logger.exception("JSON parse error")
         return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -197,9 +196,6 @@ def export_analysis_by_phone(request):
     logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
 
     analyses = Analysis.objects.filter(patient=patient).order_by('-created_at')
-    if department_type_id:
-        analyses = analyses.filter(department_types_id=int(department_type_id))
-
     logger.error(f"Total analyses found: {analyses.count()}")
 
     if not analyses.exists():
@@ -285,3 +281,4 @@ def export_analysis_by_phone(request):
     logger.error("=== EXPORT FINISHED ===")
 
     return JsonResponse({"files": files_created})
+

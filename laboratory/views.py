@@ -66,7 +66,6 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
 
-
 @csrf_exempt
 def check_patient(request):
     if request.method != "POST":
@@ -86,7 +85,6 @@ def check_patient(request):
     except Patient.DoesNotExist:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
-
     full_name = " ".join(filter(None, [
         getattr(patient, "name", ""),
         getattr(patient, "last_name", ""),
@@ -94,22 +92,7 @@ def check_patient(request):
     ])).strip()
 
     if not full_name:
-        full_name = f"patient_{patient.id}"  # fallback
-
-    dept_types = []
-    departments = Department.objects.filter(patient=patient)
-    seen = set()
-    for dept in departments:
-        for dt in dept.department_types.all():
-            if dt.id not in seen:
-                dept_types.append({
-                    "id": dt.id,
-                    "title": dt.title
-                })
-                seen.add(dt.id)
-
-    if not dept_types:
-        dept_types = [{"id": 1, "title": "Umumiy tahlil"}]
+        full_name = f"patient_{patient.id}"
 
     return JsonResponse({
         "found": True,
@@ -119,8 +102,7 @@ def check_patient(request):
             "name": getattr(patient, "name", ""),
             "last_name": getattr(patient, "last_name", ""),
             "middle_name": getattr(patient, "middle_name", "")
-        },
-        "department_types": dept_types
+        }
     })
 
 

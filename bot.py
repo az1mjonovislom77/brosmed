@@ -22,8 +22,6 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 user_state = {}
 
 
-
-
 def main_menu_kb():
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -64,21 +62,12 @@ async def handle_message(message: types.Message):
         await message.answer("Yangi bemor ID kiriting:", reply_markup=ReplyKeyboardRemove())
         return
 
-    if text == "Yana tahlil olish":
-        if "patient_id" not in state or "departments" not in state:
-            await message.answer("Avval bemor ID kiritishingiz kerak.")
-            return
-        state["step"] = "choose_department"
-        await message.answer("Bo‘lim tanlang:", reply_markup=departments_kb(state["departments"]))
-        return
-
     if state["step"] == "patient_id":
         if not text.isdigit():
-            await message.answer("ID faqat raqamlardan iborat bo‘lishi kerak. Qayta kiriting.")
+            await message.answer("ID faqat raqamlardan iborat bo‘lishi kerak.")
             return
 
         state["patient_id"] = int(text)
-        state["step"] = "checking_patient"
         await message.answer("Tekshirilmoqda...")
 
         try:
@@ -86,38 +75,51 @@ async def handle_message(message: types.Message):
                 resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": state["patient_id"]})
 
                 if resp.status_code != 200:
-                    await message.answer("Ushbu ID bo‘yicha bemor topilmadi.")
-                    del state["patient_id"]
-                    state["step"] = "patient_id"
+                    await message.answer("Bemor topilmadi.")
                     return
 
                 data = resp.json()
+                patient = data.get("patient", {})
 
-                patient_data = data.get("patient", {})
-                full_name = (
-                    f"{patient_data.get('name', '')} "
-                    f"{patient_data.get('last_name', '')}"
-                ).strip()
-
-                state["patient_name"] = full_name if full_name else "patient"
-                departments = data.get("department_types", [])
-
-                if not departments:
-                    await message.answer("Bu bemorda tahlil topilmadi.")
-                    state["step"] = "patient_id"
-                    return
-
-                state["departments"] = departments
-                state["step"] = "choose_department"
+                state["patient_name"] = patient.get("full_name", "patient")
 
                 await message.answer(
-                    f"Bemor topildi: {state['patient_name']}\n\nMavjud bo‘limlar:",
-                    reply_markup=departments_kb(departments)
+                    f"Bemor topildi: {state['patient_name']}\n"
+                    f"Tahlillar yuklanmoqda..."
                 )
 
+                export = await client.post(EXPORT_ANALYSIS_URL, json={"patient_id": state["patient_id"]})
+
+                if export.status_code != 200:
+                    await message.answer("Tahlillar topilmadi.")
+                    return
+
+                files = export.json().get("files", [])
+
+                if not files:
+                    await message.answer("Bu bemorda tahlil topilmadi.")
+                    return
+
+                await message.answer(f"{len(files)} ta tahlil topildi. Yuborilmoqda...")
+
+                for f in files:
+                    url = f["url"]
+                    filename = f["filename"]
+
+                    r = await client.get(url)
+                    temp = os.path.join(TEMP_DIR, filename)
+
+                    async with aiofiles.open(temp, "wb") as doc:
+                        await doc.write(r.content)
+
+                    await message.answer_document(FSInputFile(temp), caption=filename)
+                    os.remove(temp)
+
+                await message.answer("Barcha tahlillar yuborildi!", reply_markup=main_menu_kb())
+
         except Exception as e:
-            print("Check patient xato:", e)
-            await message.answer("Server bilan bog‘lanishda xatolik. Qayta urining.")
+            print("Export xato:", e)
+            await message.answer("Server bilan bog‘lanishda xatolik.Qayta uruning")
             state["step"] = "patient_id"
         return
 
