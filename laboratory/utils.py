@@ -70,7 +70,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
                                                                                            None) else ""
 
     subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title}\n")
+    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.id}\n")
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -133,7 +133,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
                     for run in paragraph.runs:
                         run.font.name = 'Times New Roman'
-                        run.font.size = Pt(10)  # ixcham shrift
+                        run.font.size = Pt(10)
 
     dept = analysis.department_types.department
     user = dept.user_set.first()
@@ -281,4 +281,3 @@ def export_analysis_by_phone(request):
     logger.error("=== EXPORT FINISHED ===")
 
     return JsonResponse({"files": files_created})
-
