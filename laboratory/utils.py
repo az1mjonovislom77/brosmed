@@ -1,5 +1,4 @@
 import os
-import re
 import json
 import logging
 import subprocess
@@ -11,6 +10,8 @@ from docx.oxml.ns import qn
 from django.views.decorators.csrf import csrf_exempt
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 
 
 def convert_docx_to_pdf(docx_path: str) -> str:
@@ -195,7 +196,8 @@ def export_analysis_by_phone(request):
 
     logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
 
-    analyses = Analysis.objects.filter(patient=patient).order_by('-created_at')
+    one_month_ago = timezone.now() - timedelta(days=30)
+    analyses = Analysis.objects.filter(patient=patient, created_at__gte=one_month_ago).order_by('-created_at')
     logger.error(f"Total analyses found: {analyses.count()}")
 
     if not analyses.exists():
@@ -281,4 +283,3 @@ def export_analysis_by_phone(request):
     logger.error("=== EXPORT FINISHED ===")
 
     return JsonResponse({"files": files_created})
-
