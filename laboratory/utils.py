@@ -68,6 +68,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
     info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
                                                                                            None) else ""
+    info_table.cell(4, 0).text = "Bemor ID:"
+    info_table.cell(4, 1).text = patient.id
 
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title}\n")
@@ -146,7 +148,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     left_cell = sign_table.cell(0, 0)
     left_p = left_cell.paragraphs[0]
-    left_p.add_run("Врач:  ___________________________")
+    left_p.add_run("Врач лаборант:  ___________________________")
     left_p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     right_cell = sign_table.cell(0, 1)
@@ -281,4 +283,3 @@ def export_analysis_by_phone(request):
     logger.error("=== EXPORT FINISHED ===")
 
     return JsonResponse({"files": files_created})
-
