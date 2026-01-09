@@ -243,25 +243,12 @@ def export_analysis_by_phone(request):
         )
 
         if value_row:
-            norma_qs = (
-                AnalysisResult.objects
-                .filter(
-                    patient=patient,
-                    result=value_row.result
-                )
-                .select_related("result")
-            )
-
-            norma_list = []
-            for ar in norma_qs:
-                n = (ar.result.norma or "").strip()
-                if n and n not in norma_list:
-                    norma_list.append(n)
+            norma_text = (value_row.result.norma or "").strip()
 
             results_list.append({
                 "title": value_row.result.title if value_row.result else "Analiz",
                 "value": value_row.analysis_result,
-                "norma": "\n".join(norma_list)
+                "norma": norma_text
             })
 
         logger.error(f"FINAL results_list count: {len(results_list)}")
