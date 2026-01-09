@@ -258,7 +258,8 @@ def export_analysis_by_phone(request):
                 if r.norma:
                     norma_list.append(r.norma.strip())
 
-            norma_text = "\n".join(norma_list) if norma_list else "-"
+            norma_text = ",\n".join(norma_list) if norma_list else "-"
+
 
             results_list.append({
                 "title": title,
