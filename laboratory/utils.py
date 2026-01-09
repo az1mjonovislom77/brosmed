@@ -228,31 +228,36 @@ def export_analysis_by_phone(request):
         docx_path = os.path.join(export_dir, f"{base}.docx")
 
         results_list = []
-        seen = set()
+        seen_titles = set()
 
-        qs = AnalysisResult.objects.filter(
-            patient=patient,
-            result__department_types=analysis.department_types
-        ).select_related("result").order_by("-created_at")
-
-        logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
+        qs = (
+            AnalysisResult.objects
+            .filter(
+                patient=patient,
+                result__department_types=analysis.department_types,
+                analysis_result__isnull=False
+            )
+            .exclude(analysis_result__exact="")
+            .select_related("result")
+            .order_by("-created_at")
+        )
 
         for ar in qs:
-            value = (ar.analysis_result or "").strip()
-            if not value:
+            if not ar.result:
                 continue
 
-            title = ar.result.title if ar.result and ar.result.title else "Analiz"
-            norma = ar.result.norma if ar.result and ar.result.norma else "-"
-
-            if title in seen:
+            title = ar.result.title
+            if title in seen_titles:
                 continue
-            seen.add(title)
+
+            seen_titles.add(title)
+
+            norma_text = (ar.result.norma or "").strip()
 
             results_list.append({
                 "title": title,
-                "value": value,
-                "norma": norma
+                "value": ar.analysis_result,
+                "norma": norma_text
             })
 
         logger.error(f"FINAL results_list count: {len(results_list)}")
