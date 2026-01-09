@@ -4,7 +4,6 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-t
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
     AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
 from reception.models import Analysis
@@ -65,6 +64,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
+
 
 @csrf_exempt
 def check_patient(request):
