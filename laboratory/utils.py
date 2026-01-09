@@ -93,7 +93,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         if not norma_str:
             norma_str = "-"
 
-        norma_str = norma_str.replace('\n', ' | ') \
+        norma_str = norma_str \
             .replace('Мужчины:', 'М:') \
             .replace('Женщины:', 'Ж:') \
             .replace('Жен:', 'Ж:') \
@@ -247,7 +247,6 @@ def export_analysis_by_phone(request):
             if title in seen:
                 continue
             seen.add(title)
-
 
             norma_qs = Result.objects.filter(
                 title=title,
