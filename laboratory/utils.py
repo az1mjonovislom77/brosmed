@@ -2,12 +2,14 @@ import os
 import json
 import logging
 import subprocess
+
 from django.http import JsonResponse
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from django.views.decorators.csrf import csrf_exempt
+
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 from django.utils import timezone
@@ -16,13 +18,31 @@ from datetime import timedelta
 
 def convert_docx_to_pdf(docx_path: str) -> str:
     output_dir = os.path.dirname(docx_path)
-    subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, docx_path], check=True)
+
+    subprocess.run(
+        [
+            "libreoffice",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            output_dir,
+            docx_path,
+        ],
+        check=True
+    )
 
     return docx_path.replace(".docx", ".pdf")
 
 
-def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None,
-                         analysis_title="Analiz"):
+def create_analysis_docx(
+    patient,
+    analysis,
+    results_list,
+    output_path,
+    header_image_path=None,
+    analysis_title="Analiz",
+):
     doc = Document()
 
     section = doc.sections[0]
@@ -31,9 +51,9 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     section.left_margin = Inches(0.5)
     section.right_margin = Inches(0.5)
 
-    style = doc.styles['Normal']
-    style.font.name = 'Times New Roman'
-    style._element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
+    style = doc.styles["Normal"]
+    style.font.name = "Times New Roman"
+    style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
     style.font.size = Pt(11)
 
     if header_image_path and os.path.exists(header_image_path):
@@ -51,24 +71,44 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         cell_text = table.cell(0, 1)
         p_text = cell_text.paragraphs[0]
         p_text.space_before = Pt(30)
-        text = ("MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO' CHASI, 31-UY TEL: (75) 223-47-47\n"
-                "MoBIL: (97) 070-47-47 ; (97) 310-21-01")
+
+        text = (
+            "MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO' CHASI, 31-UY\n"
+            "TEL: (75) 223-47-47\n"
+            "MoBIL: (97) 070-47-47 ; (97) 310-21-01"
+        )
+
         run_text = p_text.add_run(text)
         run_text.font.size = Pt(10)
         p_text.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
     info_table = doc.add_table(rows=4, cols=2)
-    info_table.style = 'Table Grid'
+    info_table.style = "Table Grid"
     info_table.autofit = True
+
     info_table.cell(0, 0).text = "Bemor I.F.O"
-    info_table.cell(0, 1).text = f"{(patient.name or '')} {(patient.last_name or '')} {(patient.middle_name or '')}"
+    info_table.cell(0, 1).text = (
+        f"{(patient.name or '')} "
+        f"{(patient.last_name or '')} "
+        f"{(patient.middle_name or '')}"
+    )
+
     info_table.cell(1, 0).text = "Tugilgan sanasi"
-    info_table.cell(1, 1).text = patient.birth_date.strftime("%Y-%m-%d") if getattr(patient, 'birth_date', None) else ""
+    info_table.cell(1, 1).text = (
+        patient.birth_date.strftime("%Y-%m-%d")
+        if getattr(patient, "birth_date", None)
+        else ""
+    )
+
     info_table.cell(2, 0).text = "Telefon raqami"
     info_table.cell(2, 1).text = patient.phone_number or ""
+
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
-    info_table.cell(3, 1).text = analysis.created_at.strftime("%Y-%m-%d %H:%M") if getattr(analysis, 'created_at',
-                                                                                           None) else ""
+    info_table.cell(3, 1).text = (
+        analysis.created_at.strftime("%Y-%m-%d %H:%M")
+        if getattr(analysis, "created_at", None)
+        else ""
+    )
 
     subtitle = doc.add_paragraph()
     subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.id}\n")
@@ -77,31 +117,38 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     valid_results = []
+
     for item in results_list:
-        raw_value = item.get('value')
+        raw_value = item.get("value")
         if raw_value is None:
             continue
+
         value_str = str(raw_value).strip()
-        if not value_str or value_str.lower() in ['none', 'null', '']:
+        if not value_str or value_str.lower() in ["none", "null", ""]:
             continue
 
-        title = item.get('title', '').strip()
-        norma = item.get('norma', '')
-        norma_str = str(norma).strip() if norma is not None else ''
+        title = item.get("title", "").strip()
+        norma = item.get("norma", "")
+        norma_str = str(norma).strip() if norma is not None else ""
+
         if not norma_str:
             norma_str = "-"
 
-        norma_str = norma_str.replace('\n', ' | ') \
-            .replace('Мужчины:', 'М:') \
-            .replace('Женщины:', 'Ж:') \
-            .replace('Жен:', 'Ж:') \
-            .replace('Муж:', 'М:')
+        norma_str = (
+            norma_str.replace("\n", " | ")
+            .replace("Мужчины:", "М:")
+            .replace("Женщины:", "Ж:")
+            .replace("Жен:", "Ж:")
+            .replace("Муж:", "М:")
+        )
 
-        valid_results.append({
-            'title': title,
-            'value': value_str,
-            'norma': norma_str
-        })
+        valid_results.append(
+            {
+                "title": title,
+                "value": value_str,
+                "norma": norma_str,
+            }
+        )
 
     if not valid_results:
         p = doc.add_paragraph("Natija hali kiritilmagan")
@@ -109,11 +156,10 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         run = p.runs[0]
         run.italic = True
         run.font.size = Pt(12)
-        run.font.name = 'Times New Roman'
+        run.font.name = "Times New Roman"
     else:
-        table = doc.add_table(rows=1, cols=3, style='Table Grid')
+        table = doc.add_table(rows=1, cols=3, style="Table Grid")
         table.autofit = False
-
         table.columns[0].width = Inches(3.9)
         table.columns[1].width = Inches(1.9)
         table.columns[2].width = Inches(1.9)
@@ -125,15 +171,15 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
         for item in reversed(valid_results):
             row = table.add_row().cells
-            row[0].text = item['title']
-            row[1].text = item['value']
-            row[2].text = item['norma']
+            row[0].text = item["title"]
+            row[1].text = item["value"]
+            row[2].text = item["norma"]
 
             for cell in row:
                 for paragraph in cell.paragraphs:
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
                     for run in paragraph.runs:
-                        run.font.name = 'Times New Roman'
+                        run.font.name = "Times New Roman"
                         run.font.size = Pt(10)
 
     dept = analysis.department_types.department
@@ -147,7 +193,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     left_cell = sign_table.cell(0, 0)
     left_p = left_cell.paragraphs[0]
-    left_p.add_run("Врач лаборант:  _____________________")
+    left_p.add_run("Врач лаборант: _____________________")
     left_p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     right_cell = sign_table.cell(0, 1)
@@ -157,7 +203,10 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     doc.add_paragraph()
 
-    footer_image_path = os.path.join(settings.MEDIA_ROOT, "images", "pechat.jpg")
+    footer_image_path = os.path.join(
+        settings.MEDIA_ROOT, "images", "pechat.jpg"
+    )
+
     if os.path.exists(footer_image_path):
         p = doc.add_paragraph()
         r = p.add_run()
@@ -194,68 +243,109 @@ def export_analysis_by_phone(request):
         logger.error("Patient not found")
         return JsonResponse({"error": "Patient not found"}, status=404)
 
-    logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
+    logger.error(
+        f"Patient FOUND: id={patient.id}, name={patient.name}"
+    )
 
     one_month_ago = timezone.now() - timedelta(days=30)
-    analyses = Analysis.objects.filter(patient=patient, created_at__gte=one_month_ago).order_by('-created_at')
+
+    analyses = Analysis.objects.filter(
+        patient=patient,
+        created_at__gte=one_month_ago,
+    ).order_by("-created_at")
+
     logger.error(f"Total analyses found: {analyses.count()}")
 
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
-    export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
+    export_dir = os.path.join(
+        settings.MEDIA_ROOT, "temp_exports"
+    )
     os.makedirs(export_dir, exist_ok=True)
 
-    header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
+    header_image_path = os.path.join(
+        settings.MEDIA_ROOT, "images", "logo.jpg"
+    )
+
     if not os.path.exists(header_image_path):
         header_image_path = None
 
     files_created = []
 
     for analysis in analyses:
-        logger.error(f"--- PROCESSING ANALYSIS id={analysis.id}")
+        logger.error(
+            f"--- PROCESSING ANALYSIS id={analysis.id}"
+        )
 
-        full_name = " ".join(filter(None, [
-            patient.name,
-            patient.last_name,
-            getattr(patient, "middle_name", "")
-        ])).strip()
+        full_name = " ".join(
+            filter(
+                None,
+                [
+                    patient.name,
+                    patient.last_name,
+                    getattr(patient, "middle_name", ""),
+                ],
+            )
+        ).strip()
 
         if not full_name:
             full_name = f"patient_{patient.id}"
 
         base = f"{full_name}_{analysis.id}"
-        docx_path = os.path.join(export_dir, f"{base}.docx")
+        docx_path = os.path.join(
+            export_dir, f"{base}.docx"
+        )
 
         results_list = []
         seen = set()
 
-        qs = AnalysisResult.objects.filter(
-            patient=patient,
-            result__department_types=analysis.department_types
-        ).select_related("result").order_by("-created_at")
+        qs = (
+            AnalysisResult.objects.filter(
+                patient=patient,
+                result__department_types=analysis.department_types,
+            )
+            .select_related("result")
+            .order_by("-created_at")
+        )
 
-        logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
+        logger.error(
+            f"TOTAL AnalysisResult for patient: {qs.count()}"
+        )
 
         for ar in qs:
             value = (ar.analysis_result or "").strip()
             if not value:
                 continue
 
-            title = ar.result.title if ar.result and ar.result.title else "Analiz"
-            norma = ar.result.norma if ar.result and ar.result.norma else "-"
+            title = (
+                ar.result.title
+                if ar.result and ar.result.title
+                else "Analiz"
+            )
+
+            norma = (
+                ar.result.norma
+                if ar.result and ar.result.norma
+                else "-"
+            )
 
             if title in seen:
                 continue
+
             seen.add(title)
 
-            results_list.append({
-                "title": title,
-                "value": value,
-                "norma": norma
-            })
+            results_list.append(
+                {
+                    "title": title,
+                    "value": value,
+                    "norma": norma,
+                }
+            )
 
-        logger.error(f"FINAL results_list count: {len(results_list)}")
+        logger.error(
+            f"FINAL results_list count: {len(results_list)}"
+        )
 
         create_analysis_docx(
             patient=patient,
@@ -263,7 +353,7 @@ def export_analysis_by_phone(request):
             results_list=results_list,
             output_path=docx_path,
             header_image_path=header_image_path,
-            analysis_title=f"{analysis.department_types.title} natijasi"
+            analysis_title=f"{analysis.department_types.title} natijasi",
         )
 
         pdf_path = convert_docx_to_pdf(docx_path)
@@ -275,10 +365,12 @@ def export_analysis_by_phone(request):
             f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
         )
 
-        files_created.append({
-            "filename": os.path.basename(pdf_path),
-            "url": pdf_url
-        })
+        files_created.append(
+            {
+                "filename": os.path.basename(pdf_path),
+                "url": pdf_url,
+            }
+        )
 
     logger.error("=== EXPORT FINISHED ===")
 
