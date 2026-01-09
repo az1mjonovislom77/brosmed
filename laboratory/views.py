@@ -65,6 +65,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
 
+
 @csrf_exempt
 def check_patient(request):
     if request.method != "POST":

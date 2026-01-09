@@ -8,8 +8,6 @@ from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from django.views.decorators.csrf import csrf_exempt
-
-from department.models import Result
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 from django.utils import timezone
@@ -93,7 +91,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         if not norma_str:
             norma_str = "-"
 
-        norma_str = norma_str \
+        norma_str = norma_str.replace('\n', ' | ') \
             .replace('Мужчины:', 'М:') \
             .replace('Женщины:', 'Ж:') \
             .replace('Жен:', 'Ж:') \
@@ -237,34 +235,24 @@ def export_analysis_by_phone(request):
             result__department_types=analysis.department_types
         ).select_related("result").order_by("-created_at")
 
+        logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
+
         for ar in qs:
             value = (ar.analysis_result or "").strip()
-            if not value or not ar.result or not ar.result.title:
+            if not value:
                 continue
 
-            title = ar.result.title
+            title = ar.result.title if ar.result and ar.result.title else "Analiz"
+            norma = ar.result.norma if ar.result and ar.result.norma else "-"
 
             if title in seen:
                 continue
             seen.add(title)
 
-            norma_qs = Result.objects.filter(
-                title=title,
-                department_types=ar.result.department_types
-            ).order_by("id")
-
-            norma_list = []
-            for r in norma_qs:
-                if r.norma:
-                    norma_list.append(r.norma.strip())
-
-            norma_text = ",\n".join(norma_list) if norma_list else "-"
-
-
             results_list.append({
                 "title": title,
                 "value": value,
-                "norma": norma_text
+                "norma": norma
             })
 
         logger.error(f"FINAL results_list count: {len(results_list)}")
