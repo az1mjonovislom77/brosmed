@@ -64,36 +64,30 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
         return Response(output.data)
+
 @csrf_exempt
 def check_patient(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST only"}, status=405)
 
-    patient_id = None
-
     try:
-        if request.body:
-            body = json.loads(request.body.decode("utf-8"))
-            patient_id = body.get("patient_id")
+        body = json.loads(request.body)
+        patient_id = body.get("patient_id")
     except Exception:
-        patient_id = None
-
-
-    if not patient_id:
-        patient_id = request.POST.get("patient_id")
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     if not patient_id:
         return JsonResponse({"error": "patient_id required"}, status=400)
 
     try:
         patient = Patient.objects.get(id=int(patient_id))
-    except (Patient.DoesNotExist, ValueError):
+    except Patient.DoesNotExist:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
     full_name = " ".join(filter(None, [
-        patient.name,
-        patient.last_name,
-        patient.middle_name
+        getattr(patient, "name", ""),
+        getattr(patient, "last_name", ""),
+        getattr(patient, "middle_name", "")
     ])).strip()
 
     if not full_name:
@@ -104,12 +98,11 @@ def check_patient(request):
         "patient": {
             "id": patient.id,
             "full_name": full_name,
-            "name": patient.name or "",
-            "last_name": patient.last_name or "",
-            "middle_name": patient.middle_name or ""
+            "name": getattr(patient, "name", ""),
+            "last_name": getattr(patient, "last_name", ""),
+            "middle_name": getattr(patient, "middle_name", "")
         }
     })
-
 
 
 @extend_schema(tags=['Analysis'])
