@@ -353,7 +353,7 @@ def export_analysis_by_phone(request):
             results_list=results_list,
             output_path=docx_path,
             header_image_path=header_image_path,
-            analysis_title=f"{analysis.department_types.title} natijasi",
+            analysis_title=f"{analysis.department_types.title}",
         )
 
         pdf_path = convert_docx_to_pdf(docx_path)
