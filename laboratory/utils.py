@@ -165,8 +165,8 @@ def create_analysis_docx(
         table.columns[2].width = Inches(1.9)
 
         hdr = table.rows[0].cells
-        hdr[0].text = "Тахлил номи"
-        hdr[1].text = "Тахлил натижаси"
+        hdr[0].text = "Название анализа"
+        hdr[1].text = "Результат анализа"
         hdr[2].text = "Норма"
 
         for item in reversed(valid_results):
