@@ -247,7 +247,7 @@ def export_analysis_by_phone(request):
         f"Patient FOUND: id={patient.id}, name={patient.name}"
     )
 
-    one_month_ago = timezone.now() - timedelta(days=30)
+    one_month_ago = timezone.now() - timedelta(days=90)
 
     analyses = Analysis.objects.filter(
         patient=patient,
