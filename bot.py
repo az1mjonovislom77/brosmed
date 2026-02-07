@@ -70,7 +70,7 @@ async def handle_message(message: types.Message):
         await message.answer("Tekshirilmoqda...")
 
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with httpx.AsyncClient(timeout=120) as client:
                 resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": state["patient_id"]})
 
                 if resp.status_code != 200:
