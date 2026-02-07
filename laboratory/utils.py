@@ -301,7 +301,6 @@ def export_analysis_by_phone(request):
                 result__department_types=analysis.department_types,
             )
             .select_related("result")
-            .order_by("-created_at")
         )
 
         logger.error(
