@@ -87,13 +87,32 @@ async def handle_message(message: types.Message):
                     f"Tahlillar yuklanmoqda..."
                 )
 
-                export = await client.post(EXPORT_ANALYSIS_URL, json={"patient_id": state["patient_id"]})
+                export = await client.post(
+                    EXPORT_ANALYSIS_URL,
+                    json={"patient_id": state["patient_id"]}
+                )
 
-                if export.status_code != 200:
-                    await message.answer("Tahlillar topilmadi.")
+                if export.status_code == 404:
+                    await message.answer(
+                        "Bu bemor uchun tahlillar topilmadi."
+                    )
                     return
 
-                files = export.json().get("files", [])
+                if export.status_code != 200:
+                    await message.answer(
+                        "Serverda xatolik yuz berdi. Keyinroq urinib ko‘ring."
+                    )
+                    return
+
+                try:
+                    data = export.json()
+                except Exception:
+                    await message.answer(
+                        "Server noto‘g‘ri javob qaytardi."
+                    )
+                    return
+
+                files = data.get("files", [])
 
                 if not files:
                     await message.answer("Bu bemorda tahlil topilmadi.")
