@@ -36,12 +36,12 @@ def convert_docx_to_pdf(docx_path: str) -> str:
 
 
 def create_analysis_docx(
-        patient,
-        analysis,
-        results_list,
-        output_path,
-        header_image_path=None,
-        analysis_title="Analiz",
+    patient,
+    analysis,
+    results_list,
+    output_path,
+    header_image_path=None,
+    analysis_title="Analiz",
 ):
     doc = Document()
 
@@ -247,7 +247,12 @@ def export_analysis_by_phone(request):
         f"Patient FOUND: id={patient.id}, name={patient.name}"
     )
 
-    analyses = Analysis.objects.filter(patient=patient)
+    one_month_ago = timezone.now() - timedelta(days=30)
+
+    analyses = Analysis.objects.filter(
+        patient=patient,
+        created_at__gte=one_month_ago,
+    ).order_by("-created_at")
 
     logger.error(f"Total analyses found: {analyses.count()}")
 
@@ -301,6 +306,7 @@ def export_analysis_by_phone(request):
                 result__department_types=analysis.department_types,
             )
             .select_related("result")
+            .order_by("-created_at")
         )
 
         logger.error(
