@@ -137,7 +137,7 @@ async def handle_message(message: types.Message):
 
         except Exception as e:
             print("Export xato:", repr(e))
-            await message.answer(f"XATOLIK: {repr(e)}")
+            await message.answer("Server bilan bog‘lanishda xatolik.Qayta uruning")
             state["step"] = "patient_id"
         return
 
