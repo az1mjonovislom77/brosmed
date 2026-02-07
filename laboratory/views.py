@@ -8,7 +8,7 @@ from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, A
     AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
 from reception.models import Analysis
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
@@ -23,6 +23,11 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
 
+    def get_queryset(self):
+        return (Analysis.objects
+                .select_related('patient')
+                .prefetch_related('department_types'))
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return AnalysisPostSerializer
@@ -31,21 +36,28 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     @action(detail=False, methods=['get'])
     def stats(self, request):
         today = timezone.now().date()
-        counts = {
-            'kunlik_tahlil': Analysis.objects.filter(created_at__date=today).count(),
-            'jami_tahlil': Analysis.objects.count(),
-            'yangi_tahlil': Analysis.objects.filter(status=Analysis.Status.new, created_at__date=today).count(),
-            'jarayondagi_tahlil': Analysis.objects.filter(status=Analysis.Status.in_progress,
-                                                          created_at__date=today).count(),
-            'yakunlangan_tahlil': Analysis.objects.filter(status=Analysis.Status.finished,
-                                                          created_at__date=today).count(),
-        }
-        last_analysis = Analysis.objects.all().order_by('-created_at')[:10]
+
+        qs = Analysis.objects.all()
+
+        counts = qs.aggregate(
+            jami_tahlil=Count('id'),
+            kunlik_tahlil=Count('id', filter=Q(created_at__date=today)),
+            yangi_tahlil=Count('id', filter=Q(status=Analysis.Status.new, created_at__date=today)),
+            jarayondagi_tahlil=Count('id', filter=Q(status=Analysis.Status.in_progress, created_at__date=today)),
+            yakunlangan_tahlil=Count('id', filter=Q(status=Analysis.Status.finished, created_at__date=today)),
+        )
+
+        last_analysis = (qs.select_related('patient').prefetch_related('department_types').order_by('-created_at')[:10])
+
         counts['oxirgi_tahlillar'] = AnalysisSerializer(last_analysis, many=True, context={'request': request}).data
+
         return Response(counts, status=status.HTTP_200_OK)
 
-    @extend_schema(methods=['POST'], request=AnalysisSearchInputSerializer,
-                   responses={200: AnalysisSerializer(many=True)}, )
+    @extend_schema(
+        methods=['POST'],
+        request=AnalysisSearchInputSerializer,
+        responses={200: AnalysisSerializer(many=True)},
+    )
     @action(detail=False, methods=['post'])
     def search(self, request):
         serializer = AnalysisSearchInputSerializer(data=request.data)
@@ -53,17 +65,31 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         search_value = serializer.validated_data['search']
 
-        queryset = Analysis.objects.filter(
-            Q(status__icontains=search_value)
-            | Q(patient__name__icontains=search_value)
-            | Q(patient__last_name__icontains=search_value)
-            | Q(patient__middle_name__icontains=search_value)
-            | Q(patient__phone_number__icontains=search_value)
-            | Q(department_types__title__icontains=search_value)
-        ).distinct()
+        queryset = (
+            self.get_queryset()
+            .filter(
+                Q(status__icontains=search_value)
+                | Q(patient__name__icontains=search_value)
+                | Q(patient__last_name__icontains=search_value)
+                | Q(patient__middle_name__icontains=search_value)
+                | Q(patient__phone_number__icontains=search_value)
+                | Q(department_types__title__icontains=search_value)
+            )
+            .distinct()
+            .only(
+                'id',
+                'status',
+                'created_at',
+                'patient__id',
+                'patient__name',
+                'patient__last_name',
+                'patient__middle_name',
+                'patient__phone_number',
+            )
+        )
 
         output = AnalysisSerializer(queryset, many=True, context={'request': request})
-        return Response(output.data)
+        return Response(output.data, status=status.HTTP_200_OK)
 
 
 @csrf_exempt
