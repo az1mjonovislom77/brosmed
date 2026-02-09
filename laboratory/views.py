@@ -7,17 +7,12 @@ from rest_framework.views import APIView
 from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
     AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
 from reception.models import Analysis
-from rest_framework.response import Response
 from django.db.models import Q, Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
 from reception.models import Patient
 from user.views.user_views import PartialPutMixin
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-import math
-
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 import math
