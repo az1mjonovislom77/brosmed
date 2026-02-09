@@ -24,7 +24,7 @@ class AnalysisPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         total = self.page.paginator.count
-        limit = self.page_size
+        limit = self.get_page_size(self.request)
         total_pages = math.ceil(total / limit)
 
         return Response({
