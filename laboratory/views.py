@@ -12,13 +12,33 @@ from django.db.models import Q, Count
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
-from rest_framework.pagination import PageNumberPagination
 from reception.models import Patient
 from user.views.user_views import PartialPutMixin
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+import math
+
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+import math
 
 
 class AnalysisPagination(PageNumberPagination):
     page_size = 20
+    page_size_query_param = 'limit'
+
+    def get_paginated_response(self, data):
+        total = self.page.paginator.count
+        limit = self.page_size
+        total_pages = math.ceil(total / limit)
+
+        return Response({
+            "page": self.page.number,
+            "limit": limit,
+            "total": total,
+            "total_pages": total_pages,
+            "data": data,
+        })
 
 
 @extend_schema(tags=['Analysis'])
@@ -28,7 +48,6 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
     pagination_class = AnalysisPagination
-
 
     def get_queryset(self):
         return (Analysis.objects
