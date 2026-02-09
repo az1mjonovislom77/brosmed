@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from laboratory.serializers import AnalysisByPatientInputSerializer, AnalysisNestSerializer
+from laboratory.views import AnalysisPagination
 from reception.models import Patient, Analysis, Disease
 from reception.serializers import PatientSerializer, PatientPostSerializer, PatientSearchInputSerializer, \
     DiseaseSerializer, DiseaseGetSerializers
@@ -20,6 +21,7 @@ class PatientViewSet(viewsets.ModelViewSet, PartialPutMixin):
     serializer_class = PatientSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
+    pagination_class = AnalysisPagination
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
