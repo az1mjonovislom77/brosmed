@@ -19,7 +19,6 @@ from user.views.user_views import PartialPutMixin
 
 class AnalysisPagination(PageNumberPagination):
     page_size = 20
-    page_size_query_param = 'page_size'
 
 
 @extend_schema(tags=['Analysis'])
