@@ -8,12 +8,13 @@ import aiofiles
 from decouple import config
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = config('BOT_TOKEN')
 
-CHECK_PATIENT_URL = "http://127.0.0.1/check-patient/"
-EXPORT_ANALYSIS_URL = "http://127.0.0.1/export-by-phone/"
+CHECK_PATIENT_URL = "https://api.brosmed.uz/check-patient/"
+EXPORT_ANALYSIS_URL = "https://api.brosmed.uz/export-by-phone/"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -159,7 +160,7 @@ async def handle_message(message: types.Message):
         )
 
         try:
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True, verify=False) as client:
                 resp = await client.post(
                     EXPORT_ANALYSIS_URL,
                     json={
