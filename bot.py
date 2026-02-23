@@ -49,6 +49,11 @@ async def cmd_start(message: types.Message):
 @dp.message()
 async def handle_message(message: types.Message):
     chat_id = message.chat.id
+
+    if not message.text:
+        await message.answer("Iltimos, faqat raqam kiriting.")
+        return
+
     text = message.text.strip()
 
     if chat_id not in user_state:
