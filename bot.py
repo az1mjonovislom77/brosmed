@@ -7,6 +7,9 @@ from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, Repl
 import aiofiles
 from decouple import config
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 BOT_TOKEN = config('BOT_TOKEN')
 
 CHECK_PATIENT_URL = "http://127.0.0.1/check-patient/"
@@ -78,8 +81,8 @@ async def handle_message(message: types.Message):
             async with httpx.AsyncClient(timeout=120) as client:
                 resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": state["patient_id"]})
 
-                print("CHECK STATUS:", resp.status_code)
-                print("CHECK BODY:", resp.text)
+                logging.error(f"CHECK STATUS: {resp.status_code}")
+                logging.error(f"CHECK BODY: {resp.text}")
 
                 if resp.status_code != 200:
                     await message.answer("Bemor topilmadi.")
