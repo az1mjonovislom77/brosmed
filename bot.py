@@ -9,8 +9,8 @@ from decouple import config
 
 BOT_TOKEN = config('BOT_TOKEN')
 
-CHECK_PATIENT_URL = "https://api.brosmed.uz/check-patient/"
-EXPORT_ANALYSIS_URL = "https://api.brosmed.uz/export-by-phone/"
+CHECK_PATIENT_URL = "http://127.0.0.1/check-patient/"
+EXPORT_ANALYSIS_URL = "http://127.0.0.1/export-by-phone/"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -92,29 +92,20 @@ async def handle_message(message: types.Message):
                     f"Tahlillar yuklanmoqda..."
                 )
 
-                export = await client.post(
-                    EXPORT_ANALYSIS_URL,
-                    json={"patient_id": state["patient_id"]}
-                )
+                export = await client.post(EXPORT_ANALYSIS_URL, json={"patient_id": state["patient_id"]})
 
                 if export.status_code == 404:
-                    await message.answer(
-                        "Bu bemor uchun tahlillar topilmadi."
-                    )
+                    await message.answer("Bu bemor uchun tahlillar topilmadi.")
                     return
 
                 if export.status_code != 200:
-                    await message.answer(
-                        "Serverda xatolik yuz berdi. Keyinroq urinib ko‘ring."
-                    )
+                    await message.answer("Serverda xatolik yuz berdi. Keyinroq urinib ko‘ring.")
                     return
 
                 try:
                     data = export.json()
                 except Exception:
-                    await message.answer(
-                        "Server noto‘g‘ri javob qaytardi."
-                    )
+                    await message.answer("Server noto‘g‘ri javob qaytardi.")
                     return
 
                 files = data.get("files", [])
@@ -162,7 +153,7 @@ async def handle_message(message: types.Message):
         )
 
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
                 resp = await client.post(
                     EXPORT_ANALYSIS_URL,
                     json={
