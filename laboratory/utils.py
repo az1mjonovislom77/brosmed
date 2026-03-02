@@ -2,14 +2,14 @@ import os
 import json
 import logging
 import subprocess
-
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from django.http import JsonResponse
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from django.views.decorators.csrf import csrf_exempt
-
 from reception.models import Patient, AnalysisResult, Analysis
 from django.conf import settings
 from django.utils import timezone
@@ -36,12 +36,12 @@ def convert_docx_to_pdf(docx_path: str) -> str:
 
 
 def create_analysis_docx(
-    patient,
-    analysis,
-    results_list,
-    output_path,
-    header_image_path=None,
-    analysis_title="Analiz",
+        patient,
+        analysis,
+        results_list,
+        output_path,
+        header_image_path=None,
+        analysis_title="Analiz",
 ):
     doc = Document()
 
@@ -59,6 +59,8 @@ def create_analysis_docx(
     if header_image_path and os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
         table.columns[0].width = Inches(3)
         table.columns[1].width = Inches(3.5)
 
@@ -67,15 +69,19 @@ def create_analysis_docx(
         run_img = p_img.add_run()
         run_img.add_picture(header_image_path, width=Inches(2.5))
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+        cell_img.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
 
         cell_text = table.cell(0, 1)
+        cell_text.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         p_text = cell_text.paragraphs[0]
-        p_text.space_before = Pt(30)
+
+        p_text.space_before = Pt(0)
+        p_text.space_after = Pt(0)
 
         text = (
-            "MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO' CHASI, 31-UY\n"
+            "MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO'CHASI, 31-UY\n"
             "TEL: (75) 223-47-47\n"
-            "MoBIL: (97) 070-47-47 ; (97) 310-21-01"
+            "MOBIL: (97) 070-47-47 ; (97) 310-21-01"
         )
 
         run_text = p_text.add_run(text)
@@ -85,6 +91,7 @@ def create_analysis_docx(
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = "Table Grid"
     info_table.autofit = True
+    info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
     info_table.cell(0, 0).text = "Bemor I.F.O"
     info_table.cell(0, 1).text = (
