@@ -79,7 +79,8 @@ def create_analysis_docx(
         p_text.space_after = Pt(0)
 
         text = (
-            "MANZIL: QARSHI SHAHAR KAT - MFY, NASAF KO'CHASI, 31-UY\n"
+            "MANZIL: QARSHI SHAHAR KAT - MFY,\n"
+            "NASAF KO'CHASI, 31-UY\n"
             "TEL: (75) 223-47-47\n"
             "MOBIL: (97) 070-47-47 ; (97) 310-21-01"
         )
