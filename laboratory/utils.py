@@ -61,8 +61,8 @@ def create_analysis_docx(
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-        table.columns[0].width = Inches(3)
-        table.columns[1].width = Inches(3.5)
+        table.columns[0].width = Inches(3.4)
+        table.columns[1].width = Inches(3.1)
 
         cell_img = table.cell(0, 0)
         p_img = cell_img.paragraphs[0]
