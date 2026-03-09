@@ -42,13 +42,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
-
 ROOT_URLCONF = 'pdf_service.urls'
 
 TEMPLATES = [
