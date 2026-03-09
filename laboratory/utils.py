@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def export_analysis_by_phone(request):
+
     if request.method != "POST":
         return JsonResponse({"error": "Only POST"}, status=405)
 
@@ -32,56 +33,64 @@ def export_analysis_by_phone(request):
 
     one_month_ago = timezone.now() - timedelta(days=90)
 
-    analyses = Analysis.objects.filter(
-        patient=patient,
-        created_at__gte=one_month_ago
-    ).order_by("-created_at")
+    analyses = (
+        Analysis.objects
+        .filter(patient=patient, created_at__gte=one_month_ago)
+        .select_related("department_types")
+        .order_by("-created_at")
+    )
 
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
     files_created = []
 
-    used = set()
-
-    results_by_dept = {}
-
-    all_results = (
-        AnalysisResult.objects
-        .filter(patient=patient)
-        .select_related("result")
-    )
-
-    for ar in all_results:
-        if not ar.result:
-            continue
-
-        dept_id = ar.result.department_types_id
-        results_by_dept.setdefault(dept_id, []).append(ar)
-
     for analysis in analyses:
 
-        dept_id = analysis.department_types_id
-        if not dept_id:
+        if not analysis.department_types:
             continue
 
-        results = results_by_dept.get(dept_id, [])
-
         results_list = []
+        seen = set()
 
-        for ar in results:
+        qs = (
+            AnalysisResult.objects
+            .filter(
+                patient=patient,
+                result__department_types=analysis.department_types
+            )
+            .select_related("result")
+            .order_by("-created_at")
+        )
+
+        for ar in qs:
 
             value = (ar.analysis_result or "").strip()
             if not value:
                 continue
 
-            results_list.append({
-                "title": ar.result.title,
-                "value": value,
-                "norma": ar.result.norma or "-"
-            })
+            title = (
+                ar.result.title
+                if ar.result and ar.result.title
+                else "Analiz"
+            )
 
-            used.add(ar.id)
+            norma = (
+                ar.result.norma
+                if ar.result and ar.result.norma
+                else "-"
+            )
+
+            if title in seen:
+                continue
+
+            seen.add(title)
+
+            results_list.append({
+                "title": title,
+                "value": value,
+                "norma": norma
+            })
 
         if not results_list:
             continue
