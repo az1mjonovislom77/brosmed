@@ -9,10 +9,19 @@ from docx.oxml.ns import qn
 
 
 def convert_docx_to_pdf(docx_path: str):
+
     output_dir = os.path.dirname(docx_path)
 
     subprocess.run(
-        ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir", output_dir, docx_path],
+        [
+            "libreoffice",
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            output_dir,
+            docx_path,
+        ],
         check=True
     )
 
@@ -27,6 +36,7 @@ def create_analysis_docx(
         header_image_path=None,
         analysis_title="Analiz"
 ):
+
     doc = Document()
 
     section = doc.sections[0]
@@ -45,6 +55,7 @@ def create_analysis_docx(
         header_image_path = "/home/brosmed/laboratory/logo.jpg"
 
     if os.path.exists(header_image_path):
+
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -71,35 +82,45 @@ def create_analysis_docx(
         run_text = p_text.add_run(text)
         run_text.font.size = Pt(10)
 
+    # PATIENT INFO
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = "Table Grid"
 
-    full_name = f"{patient.get('name', '')} {patient.get('last_name', '')} {patient.get('middle_name', '')}"
-
     info_table.cell(0, 0).text = "Bemor I.F.O"
-    info_table.cell(0, 1).text = full_name.strip()
+    info_table.cell(0, 1).text = (
+        f"{patient.get('name','')} "
+        f"{patient.get('last_name','')} "
+        f"{patient.get('middle_name','')}"
+    )
 
     info_table.cell(1, 0).text = "Tugilgan sanasi"
     info_table.cell(1, 1).text = str(patient.get("birth_date", ""))
 
     info_table.cell(2, 0).text = "Telefon raqami"
-    info_table.cell(2, 1).text = patient.get("birth_date", "")
+    info_table.cell(2, 1).text = patient.get("phone_number", "")
 
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
     info_table.cell(3, 1).text = str(analysis.get("created_at", ""))
 
+    # TITLE
     subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.get("id", "")}\n")
+
+    subtitle_run = subtitle.add_run(
+        f"{analysis_title} : {patient.get('id','')}\n"
+    )
+
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
+    # RESULTS CLEANING
     valid_results = []
     seen_titles = set()
 
     for item in results_list:
 
         title = item.get("title", "").strip()
+
         if not title:
             continue
 
@@ -109,6 +130,7 @@ def create_analysis_docx(
         seen_titles.add(title)
 
         value = str(item.get("value", "")).strip()
+
         if not value:
             continue
 
@@ -129,10 +151,12 @@ def create_analysis_docx(
             "norma": norma
         })
 
+    # RESULTS TABLE
     if not valid_results:
 
         p = doc.add_paragraph("Natija hali kiritilmagan")
         p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
         run = p.runs[0]
         run.italic = True
         run.font.size = Pt(12)
@@ -147,21 +171,20 @@ def create_analysis_docx(
         hdr[2].text = "Норма"
 
         for item in valid_results:
+
             row = table.add_row().cells
 
             row[0].text = item["title"]
             row[1].text = item["value"]
             row[2].text = item["norma"]
 
-    # SIGNATURE
+    # SIGN
     sign_table = doc.add_table(rows=1, cols=2)
 
     left_cell = sign_table.cell(0, 0)
     left_cell.paragraphs[0].add_run("Врач лаборант: _____________________")
 
     right_cell = sign_table.cell(0, 1)
-
-    doctor = getattr(analysis, "doctor", "")
-    right_cell.paragraphs[0].add_run(str(doctor))
+    right_cell.paragraphs[0].add_run(analysis.get("doctor", ""))
 
     doc.save(output_path)
