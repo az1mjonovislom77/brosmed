@@ -45,7 +45,7 @@ def export_analysis_by_phone(request):
     for analysis in analyses:
 
         results_list = []
-        seen_titles = set()
+        seen = set()
 
         qs = AnalysisResult.objects.filter(
             patient=patient,
@@ -60,10 +60,11 @@ def export_analysis_by_phone(request):
             title = ar.result.title if ar.result else "Analiz"
             norma = ar.result.norma if ar.result else "-"
 
-            if title in seen_titles:
-                continue
+            key = title
 
-            seen_titles.add(title)
+            if key in seen:
+                continue
+            seen.add(key)
 
             results_list.append({
                 "title": title,
