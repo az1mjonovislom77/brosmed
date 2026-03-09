@@ -32,10 +32,12 @@ def export_analysis_by_phone(request):
 
     one_month_ago = timezone.now() - timedelta(days=90)
 
-    analyses = Analysis.objects.filter(
-        patient=patient,
-        created_at__gte=one_month_ago
-    ).order_by("created_at")
+    analyses = (
+        Analysis.objects
+        .filter(patient=patient, created_at__gte=one_month_ago)
+        .select_related("department_types")
+        .order_by("created_at")
+    )
 
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
@@ -43,7 +45,12 @@ def export_analysis_by_phone(request):
     files_created = []
 
 
-    used_result_ids = set()
+    all_results = (
+        AnalysisResult.objects
+        .filter(patient=patient)
+        .select_related("result")
+        .order_by("id")
+    )
 
     for analysis in analyses:
 
@@ -52,34 +59,26 @@ def export_analysis_by_phone(request):
 
         results_list = []
 
-        result_ids = analysis.department_types.result.values_list("id", flat=True)
+        for ar in all_results:
 
-        qs = (
-            AnalysisResult.objects.filter(
-                patient=patient,
-                result_id__in=result_ids
-            )
-            .exclude(id__in=used_result_ids)
-            .select_related("result")
-        )
+            if not ar.result:
+                continue
 
-        for ar in qs:
+            if ar.result.department_types_id != analysis.department_types_id:
+                continue
 
             value = (ar.analysis_result or "").strip()
             if not value:
                 continue
 
-            title = ar.result.title if ar.result else "Analiz"
-            norma = ar.result.norma if ar.result else "-"
+            title = ar.result.title
+            norma = ar.result.norma or "-"
 
             results_list.append({
                 "title": title,
                 "value": value,
                 "norma": norma
             })
-
-            # shu result endi boshqa analysisga tushmaydi
-            used_result_ids.add(ar.id)
 
         if not results_list:
             continue
