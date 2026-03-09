@@ -32,52 +32,45 @@ def export_analysis_by_phone(request):
 
     one_month_ago = timezone.now() - timedelta(days=90)
 
-    analyses = (
-        Analysis.objects
-        .filter(patient=patient, created_at__gte=one_month_ago)
-        .select_related("department_types")
-        .order_by("created_at")
-    )
+    analyses = Analysis.objects.filter(
+        patient=patient,
+        created_at__gte=one_month_ago
+    ).order_by("-created_at")
 
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
     files_created = []
 
-    used_results = set()
-
     for analysis in analyses:
 
-        if not analysis.department_types_id:
-            continue
-
         results_list = []
+        seen = set()
 
-        result_ids = analysis.department_types.result.values_list("id", flat=True)
-
-        qs = (
-            AnalysisResult.objects
-            .filter(patient=patient, result_id__in=result_ids)
-            .exclude(id__in=used_results)
-            .select_related("result")
-        )
+        qs = (AnalysisResult.objects.filter(patient=patient,
+                                            result__department_types=analysis.department_types, ).select_related(
+            "result").order_by("-created_at"))
 
         for ar in qs:
 
             value = (ar.analysis_result or "").strip()
+
             if not value:
                 continue
 
             title = ar.result.title if ar.result else "Analiz"
             norma = ar.result.norma if ar.result else "-"
 
+            if title in seen:
+                continue
+
+            seen.add(title)
+
             results_list.append({
                 "title": title,
                 "value": value,
                 "norma": norma
             })
-
-            used_results.add(ar.id)
 
         if not results_list:
             continue
@@ -93,13 +86,14 @@ def export_analysis_by_phone(request):
             },
             "analysis": {
                 "id": analysis.id,
-                "title": analysis.department_types.title if analysis.department_types else "Analysis",
+                "title": analysis.department_types.title,
                 "created_at": str(analysis.created_at)
             },
             "results": results_list
         }
 
         try:
+
             response = requests.post(
                 "http://127.0.0.1:9000/pdf/generate/",
                 json=data,
@@ -107,6 +101,7 @@ def export_analysis_by_phone(request):
             )
 
             response.raise_for_status()
+
             pdf_url = response.json().get("url")
 
         except Exception:
