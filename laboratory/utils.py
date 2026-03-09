@@ -2,7 +2,6 @@ import os
 import json
 import logging
 import requests
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from reception.models import Patient, AnalysisResult, Analysis
@@ -39,11 +38,7 @@ def export_analysis_by_phone(request):
     logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
 
     one_month_ago = timezone.now() - timedelta(days=90)
-
-    analyses = Analysis.objects.filter(
-        patient=patient,
-        created_at__gte=one_month_ago
-    ).order_by("-created_at")
+    analyses = Analysis.objects.filter(patient=patient, created_at__gte=one_month_ago).order_by("-created_at")
 
     logger.error(f"Total analyses found: {analyses.count()}")
 
@@ -58,16 +53,9 @@ def export_analysis_by_phone(request):
 
         results_list = []
         seen = set()
-
-        qs = (
-            AnalysisResult.objects
-            .filter(
-                patient=patient,
-                result__department_types=analysis.department_types
-            )
-            .select_related("result")
-            .order_by("-created_at")
-        )
+        qs = (AnalysisResult.objects
+              .filter(patient=patient, result__department_types=analysis.department_types)
+              .select_related("result").order_by("-created_at"))
 
         logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
 
@@ -78,17 +66,12 @@ def export_analysis_by_phone(request):
             if not value:
                 continue
 
-            title = (
-                ar.result.title
-                if ar.result and ar.result.title
-                else "Analiz"
-            )
-
-            norma = (
-                ar.result.norma
-                if ar.result and ar.result.norma
-                else "-"
-            )
+            title = (ar.result.title
+                     if ar.result and ar.result.title
+                     else "Analiz")
+            norma = (ar.result.norma
+                     if ar.result and ar.result.norma
+                     else "-")
 
             if title in seen:
                 continue
@@ -103,7 +86,6 @@ def export_analysis_by_phone(request):
 
         logger.error(f"FINAL results_list count: {len(results_list)}")
 
-        # MICRO SERVICE GA YUBORILADIGAN DATA
         data = {
             "patient": {
                 "id": patient.id,
@@ -116,13 +98,9 @@ def export_analysis_by_phone(request):
             "analysis": {
                 "id": analysis.id,
                 "title": analysis.department_types.title,
-                "created_at": str(analysis.created_at)
-            },
-            "results": results_list
-        }
+                "created_at": str(analysis.created_at)}, "results": results_list}
 
         try:
-
             response = requests.post("http://127.0.0.1:9000/pdf/generate/", json=data, timeout=60)
             response.raise_for_status()
             pdf_url = response.json().get("url")
@@ -131,10 +109,7 @@ def export_analysis_by_phone(request):
             logger.exception("PDF SERVICE ERROR")
             return JsonResponse({"error": "PDF generation failed"}, status=500)
 
-        files_created.append({
-            "filename": os.path.basename(pdf_url),
-            "url": pdf_url
-        })
+        files_created.append({"filename": os.path.basename(pdf_url), "url": pdf_url})
 
     logger.error("=== EXPORT FINISHED ===")
 

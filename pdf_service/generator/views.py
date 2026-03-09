@@ -19,14 +19,12 @@ def generate_pdf(request):
     patient = body.get("patient") or {}
     analysis = body.get("analysis") or {}
     results = body.get("results") or []
-
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
     os.makedirs(export_dir, exist_ok=True)
     name = patient.get("name") or ""
     last = patient.get("last_name") or ""
     middle = patient.get("middle_name") or ""
     pid = patient.get("id")
-
     filename = f"{name}_{last}_{middle}_{pid}.docx"
     filename = filename.replace(" ", "_").replace("__", "_")
     filename = filename.encode("utf-8").decode("utf-8")

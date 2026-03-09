@@ -10,13 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from laboratory.serializers import (
-    AnalysisSerializer,
-    AnalysisPostSerializer,
-    AnalysisSearchInputSerializer,
-    AnalysisFullDetailSerializer,
-    AnalysisDetailInputSerializer,
-)
+from laboratory.serializers import AnalysisSerializer, AnalysisPostSerializer, AnalysisSearchInputSerializer, \
+    AnalysisFullDetailSerializer, AnalysisDetailInputSerializer
 from django.core.cache import cache
 from reception.models import Analysis, Patient
 from user.views.user_views import PartialPutMixin
@@ -29,7 +24,6 @@ class AnalysisPagination(PageNumberPagination):
     def get_paginated_response(self, data):
         total = self.page.paginator.count
         limit = self.get_page_size(self.request)
-
         total_pages = (total + limit - 1) // limit
 
         return Response(
@@ -52,10 +46,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     pagination_class = AnalysisPagination
 
     def get_queryset(self):
-        return (
-            Analysis.objects.select_related("patient")
-            .prefetch_related("department_types")
-        )
+        return (Analysis.objects.select_related("patient").prefetch_related("department_types"))
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -64,69 +55,34 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
-
         cache_key = "analysis:stats"
-
         cached = cache.get(cache_key)
         if cached:
             return Response(cached, status=status.HTTP_200_OK)
 
         now = timezone.now()
-
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timezone.timedelta(days=1)
-
         qs = self.get_queryset()
 
         counts = qs.aggregate(
             jami_tahlil=Count("id"),
 
             kunlik_tahlil=Count(
-                "id",
-                filter=Q(created_at__gte=start, created_at__lt=end)
-            ),
+                "id", filter=Q(created_at__gte=start, created_at__lt=end)),
 
             yangi_tahlil=Count(
-                "id",
-                filter=Q(
-                    status=Analysis.Status.new,
-                    created_at__gte=start,
-                    created_at__lt=end,
-                ),
-            ),
+                "id", filter=Q(status=Analysis.Status.new, created_at__gte=start, created_at__lt=end)),
 
             jarayondagi_tahlil=Count(
-                "id",
-                filter=Q(
-                    status=Analysis.Status.in_progress,
-                    created_at__gte=start,
-                    created_at__lt=end,
-                ),
-            ),
+                "id", filter=Q(status=Analysis.Status.in_progress, created_at__gte=start, created_at__lt=end)),
 
             yakunlangan_tahlil=Count(
-                "id",
-                filter=Q(
-                    status=Analysis.Status.finished,
-                    created_at__gte=start,
-                    created_at__lt=end,
-                ),
-            ),
-        )
+                "id", filter=Q(status=Analysis.Status.finished, created_at__gte=start, created_at__lt=end)))
 
         last_analysis = (
-            qs.only(
-                "id",
-                "status",
-                "created_at",
-                "patient__id",
-                "patient__name",
-                "patient__last_name",
-                "patient__middle_name",
-                "patient__phone_number",
-            )
-            .order_by("-created_at")[:10]
-        )
+            qs.only("id", "status", "created_at", "patient__id", "patient__name", "patient__last_name",
+                    "patient__middle_name", "patient__phone_number").order_by("-created_at")[:10])
 
         counts["oxirgi_tahlillar"] = AnalysisSerializer(last_analysis, many=True, context={"request": request}, ).data
 
@@ -134,11 +90,8 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         return Response(counts, status=status.HTTP_200_OK)
 
-    @extend_schema(
-        methods=["POST"],
-        request=AnalysisSearchInputSerializer,
-        responses={200: AnalysisSerializer(many=True)},
-    )
+    @extend_schema(methods=["POST"], request=AnalysisSearchInputSerializer,
+                   responses={200: AnalysisSerializer(many=True)})
     @action(detail=False, methods=["post"])
     def search(self, request):
         serializer = AnalysisSearchInputSerializer(data=request.data)
@@ -155,23 +108,11 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
                 | Q(patient__middle_name__icontains=search_value)
                 | Q(patient__phone_number__icontains=search_value)
                 | Q(department_types__title__icontains=search_value)
-            )
-            .distinct()
-            .only(
-                "id",
-                "status",
-                "created_at",
-                "patient__id",
-                "patient__name",
-                "patient__last_name",
-                "patient__middle_name",
-                "patient__phone_number",
-            )
-        )
+            ).distinct()
+            .only("id", "status", "created_at", "patient__id", "patient__name", "patient__last_name",
+                  "patient__middle_name", "patient__phone_number"))
 
-        output = AnalysisSerializer(
-            queryset, many=True, context={"request": request}
-        )
+        output = AnalysisSerializer(queryset, many=True, context={"request": request})
 
         return Response(output.data, status=status.HTTP_200_OK)
 
@@ -202,25 +143,13 @@ def check_patient(request):
     if not patient_id:
         return JsonResponse({"error": "patient_id required"}, status=400)
 
-    patient = (
-        Patient.objects.filter(id=patient_id)
-        .only("id", "name", "last_name", "middle_name")
-        .first()
-    )
+    patient = (Patient.objects.filter(id=patient_id).only("id", "name", "last_name", "middle_name").first())
 
     if not patient:
         return JsonResponse({"error": "Patient not found"}, status=404)
 
-    full_name = " ".join(
-        filter(
-            None,
-            [
-                getattr(patient, "name", ""),
-                getattr(patient, "last_name", ""),
-                getattr(patient, "middle_name", ""),
-            ],
-        )
-    ).strip()
+    full_name = " ".join(filter(None, [getattr(patient, "name", ""), getattr(patient, "last_name", ""),
+                                       getattr(patient, "middle_name", "")])).strip()
 
     if not full_name:
         full_name = f"patient_{patient.id}"
@@ -246,15 +175,9 @@ class AnalysisDetailByPatient(APIView):
     def post(self, request):
         serializer = AnalysisDetailInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         patient_id = serializer.validated_data["patient_id"]
         analysis_id = serializer.validated_data["analysis_id"]
-
-        patient = (
-            Patient.objects.filter(id=patient_id)
-            .only("id")
-            .first()
-        )
+        patient = (Patient.objects.filter(id=patient_id).only("id").first())
 
         if not patient:
             return Response({"error": "Patient topilmadi"}, status=404)
@@ -262,18 +185,12 @@ class AnalysisDetailByPatient(APIView):
         analysis = (
             Analysis.objects.select_related("patient")
             .prefetch_related("department_types")
-            .filter(id=analysis_id, patient=patient)
-            .first()
+            .filter(id=analysis_id, patient=patient).first()
         )
 
         if not analysis:
-            return Response(
-                {"error": "Analysis topilmadi yoki bu patientga tegishli emas"},
-                status=404,
-            )
+            return Response({"error": "Analysis topilmadi yoki bu patientga tegishli emas"}, status=404)
 
-        output = AnalysisFullDetailSerializer(
-            analysis, context={"request": request}
-        )
+        output = AnalysisFullDetailSerializer(analysis, context={"request": request})
 
         return Response(output.data, status=200)
