@@ -133,7 +133,7 @@ async def handle_message(message: types.Message):
                     async with aiofiles.open(temp, "wb") as doc:
                         await doc.write(r.content)
 
-                    await message.answer_document(FSInputFile(temp), caption=filename)
+                    await message.answer_document(FSInputFile(temp))
                     os.remove(temp)
 
                 await message.answer("Barcha tahlillar yuborildi!", reply_markup=main_menu_kb())
@@ -197,7 +197,7 @@ async def handle_message(message: types.Message):
                                     async with aiofiles.open(temp_path, "wb") as f:
                                         await f.write(r.content)
 
-                                    await message.answer_document(FSInputFile(temp_path), caption=filename)
+                                    await message.answer_document(FSInputFile(temp_path))
                                     os.remove(temp_path)
                                     await asyncio.sleep(1.2)
                         except:

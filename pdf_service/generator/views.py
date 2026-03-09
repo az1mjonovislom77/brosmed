@@ -24,11 +24,15 @@ def generate_pdf(request):
     name = patient.get("name") or ""
     last = patient.get("last_name") or ""
     middle = patient.get("middle_name") or ""
-    pid = patient.get("id")
-    filename = f"{name}_{last}_{middle}_{pid}.docx"
-    filename = filename.replace(" ", "_").replace("__", "_")
-    filename = filename.encode("utf-8").decode("utf-8")
-    docx_path = os.path.join(export_dir, filename)
+    pid = patient.get("id") or ""
+
+    parts = [name, last, middle, str(pid)]
+    filename = "_".join([p for p in parts if p]).replace(" ", "_")
+
+    filename = filename.encode("ascii", "ignore").decode()
+
+    docx_filename = filename + ".docx"
+    docx_path = os.path.join(export_dir, docx_filename)
 
     create_analysis_docx(
         patient=patient,
