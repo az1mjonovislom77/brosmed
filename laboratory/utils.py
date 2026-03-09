@@ -44,13 +44,7 @@ def export_analysis_by_phone(request):
 
     files_created = []
 
-
-    all_results = (
-        AnalysisResult.objects
-        .filter(patient=patient)
-        .select_related("result")
-        .order_by("id")
-    )
+    used_results = set()
 
     for analysis in analyses:
 
@@ -59,26 +53,31 @@ def export_analysis_by_phone(request):
 
         results_list = []
 
-        for ar in all_results:
+        result_ids = analysis.department_types.result.values_list("id", flat=True)
 
-            if not ar.result:
-                continue
+        qs = (
+            AnalysisResult.objects
+            .filter(patient=patient, result_id__in=result_ids)
+            .exclude(id__in=used_results)
+            .select_related("result")
+        )
 
-            if ar.result.department_types_id != analysis.department_types_id:
-                continue
+        for ar in qs:
 
             value = (ar.analysis_result or "").strip()
             if not value:
                 continue
 
-            title = ar.result.title
-            norma = ar.result.norma or "-"
+            title = ar.result.title if ar.result else "Analiz"
+            norma = ar.result.norma if ar.result else "-"
 
             results_list.append({
                 "title": title,
                 "value": value,
                 "norma": norma
             })
+
+            used_results.add(ar.id)
 
         if not results_list:
             continue
