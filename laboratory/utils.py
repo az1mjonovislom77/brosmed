@@ -35,19 +35,22 @@ def export_analysis_by_phone(request):
     analyses = Analysis.objects.filter(
         patient=patient,
         created_at__gte=one_month_ago
-    ).order_by("-created_at")
+    ).order_by("created_at")
 
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
     files_created = []
 
-    for analysis in analyses:
 
-        results_list = []
+    used_result_ids = set()
+
+    for analysis in analyses:
 
         if not analysis.department_types_id:
             continue
+
+        results_list = []
 
         result_ids = analysis.department_types.result.values_list("id", flat=True)
 
@@ -56,6 +59,7 @@ def export_analysis_by_phone(request):
                 patient=patient,
                 result_id__in=result_ids
             )
+            .exclude(id__in=used_result_ids)
             .select_related("result")
         )
 
@@ -74,8 +78,12 @@ def export_analysis_by_phone(request):
                 "norma": norma
             })
 
+            # shu result endi boshqa analysisga tushmaydi
+            used_result_ids.add(ar.id)
+
         if not results_list:
             continue
+
         data = {
             "patient": {
                 "id": patient.id,
@@ -94,11 +102,13 @@ def export_analysis_by_phone(request):
         }
 
         try:
-
-            response = requests.post("http://127.0.0.1:9000/pdf/generate/", json=data, timeout=60)
+            response = requests.post(
+                "http://127.0.0.1:9000/pdf/generate/",
+                json=data,
+                timeout=60
+            )
 
             response.raise_for_status()
-
             pdf_url = response.json().get("url")
 
         except Exception:
