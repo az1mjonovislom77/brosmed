@@ -44,22 +44,32 @@ def export_analysis_by_phone(request):
 
     used = set()
 
+    results_by_dept = {}
+
+    all_results = (
+        AnalysisResult.objects
+        .filter(patient=patient)
+        .select_related("result")
+    )
+
+    for ar in all_results:
+        if not ar.result:
+            continue
+
+        dept_id = ar.result.department_types_id
+        results_by_dept.setdefault(dept_id, []).append(ar)
+
     for analysis in analyses:
+
+        dept_id = analysis.department_types_id
+        if not dept_id:
+            continue
+
+        results = results_by_dept.get(dept_id, [])
 
         results_list = []
 
-        qs = (
-            AnalysisResult.objects
-            .filter(
-                patient=patient,
-                result__department_types_id=analysis.department_types_id
-            )
-            .exclude(id__in=used)
-            .select_related("result")
-            .order_by("id")
-        )
-
-        for ar in qs:
+        for ar in results:
 
             value = (ar.analysis_result or "").strip()
             if not value:
