@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def export_analysis_by_phone(request):
-    logger.error("=== EXPORT STARTED ===")
 
     if request.method != "POST":
         return JsonResponse({"error": "Only POST"}, status=405)
@@ -21,9 +20,7 @@ def export_analysis_by_phone(request):
     try:
         body = json.loads(request.body)
         patient_id = body.get("patient_id")
-        logger.error(f"Request body: patient_id={patient_id}")
     except Exception:
-        logger.exception("JSON parse error")
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     if not patient_id:
@@ -32,85 +29,86 @@ def export_analysis_by_phone(request):
     try:
         patient = Patient.objects.get(id=int(patient_id))
     except Patient.DoesNotExist:
-        logger.error("Patient not found")
         return JsonResponse({"error": "Patient not found"}, status=404)
 
-    logger.error(f"Patient FOUND: id={patient.id}, name={patient.name}")
-
     one_month_ago = timezone.now() - timedelta(days=90)
-    analyses = Analysis.objects.filter(patient=patient, created_at__gte=one_month_ago).order_by("-created_at")
 
-    logger.error(f"Total analyses found: {analyses.count()}")
+    analyses = Analysis.objects.filter(
+        patient=patient,
+        created_at__gte=one_month_ago
+    ).order_by("-created_at")
 
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
-    files_created = []
+    results_list = []
+    seen = set()
 
-    for analysis in analyses:
+    qs = (
+        AnalysisResult.objects
+        .filter(patient=patient)
+        .select_related("result")
+        .order_by("-created_at")
+    )
 
-        logger.error(f"--- PROCESSING ANALYSIS id={analysis.id}")
+    for ar in qs:
 
-        results_list = []
-        seen = set()
-        qs = (AnalysisResult.objects
-              .filter(patient=patient, result__department_types=analysis.department_types)
-              .select_related("result").order_by("-created_at"))
+        value = (ar.analysis_result or "").strip()
 
-        logger.error(f"TOTAL AnalysisResult for patient: {qs.count()}")
+        if not value:
+            continue
 
-        for ar in qs:
+        title = ar.result.title if ar.result else "Analiz"
+        norma = ar.result.norma if ar.result else "-"
 
-            value = (ar.analysis_result or "").strip()
+        if title in seen:
+            continue
 
-            if not value:
-                continue
+        seen.add(title)
 
-            title = (ar.result.title
-                     if ar.result and ar.result.title
-                     else "Analiz")
-            norma = (ar.result.norma
-                     if ar.result and ar.result.norma
-                     else "-")
+        results_list.append({
+            "title": title,
+            "value": value,
+            "norma": norma
+        })
 
-            if title in seen:
-                continue
+    latest_analysis = analyses.first()
 
-            seen.add(title)
+    data = {
+        "patient": {
+            "id": patient.id,
+            "name": patient.name,
+            "last_name": patient.last_name,
+            "middle_name": getattr(patient, "middle_name", ""),
+            "birth_date": str(patient.birth_date) if patient.birth_date else "",
+            "phone_number": patient.phone_number
+        },
+        "analysis": {
+            "id": latest_analysis.id,
+            "title": latest_analysis.department_types.title,
+            "created_at": str(latest_analysis.created_at)
+        },
+        "results": results_list
+    }
 
-            results_list.append({
-                "title": title,
-                "value": value,
-                "norma": norma
-            })
+    try:
+        response = requests.post(
+            "http://127.0.0.1:9000/pdf/generate/",
+            json=data,
+            timeout=60
+        )
 
-        logger.error(f"FINAL results_list count: {len(results_list)}")
+        response.raise_for_status()
 
-        data = {
-            "patient": {
-                "id": patient.id,
-                "name": patient.name,
-                "last_name": patient.last_name,
-                "middle_name": getattr(patient, "middle_name", ""),
-                "birth_date": str(patient.birth_date) if patient.birth_date else "",
-                "phone_number": patient.phone_number
-            },
-            "analysis": {
-                "id": analysis.id,
-                "title": analysis.department_types.title,
-                "created_at": str(analysis.created_at)}, "results": results_list}
+        pdf_url = response.json().get("url")
 
-        try:
-            response = requests.post("http://127.0.0.1:9000/pdf/generate/", json=data, timeout=60)
-            response.raise_for_status()
-            pdf_url = response.json().get("url")
+    except Exception:
+        logger.exception("PDF SERVICE ERROR")
+        return JsonResponse({"error": "PDF generation failed"}, status=500)
 
-        except Exception:
-            logger.exception("PDF SERVICE ERROR")
-            return JsonResponse({"error": "PDF generation failed"}, status=500)
-
-        files_created.append({"filename": os.path.basename(pdf_url), "url": pdf_url})
-
-    logger.error("=== EXPORT FINISHED ===")
-
-    return JsonResponse({"files": files_created})
+    return JsonResponse({
+        "files": [{
+            "filename": os.path.basename(pdf_url),
+            "url": pdf_url
+        }]
+    })
