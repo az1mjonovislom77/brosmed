@@ -4,7 +4,6 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .pdf_utils import create_analysis_docx, convert_docx_to_pdf
-from urllib.parse import unquote
 
 
 @csrf_exempt
@@ -49,5 +48,4 @@ def generate_pdf(request):
 
     pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}")
 
-    pdf_url = unquote(pdf_url)
     return JsonResponse({"url": pdf_url})
