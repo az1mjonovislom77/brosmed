@@ -47,29 +47,31 @@ def export_analysis_by_phone(request):
         results_list = []
         seen = set()
 
+
+        start = analysis.created_at - timedelta(minutes=5)
+        end = analysis.created_at + timedelta(minutes=5)
+
         qs = AnalysisResult.objects.filter(
             patient=patient,
             result__department_types=analysis.department_types,
+            created_at__gte=start,
+            created_at__lte=end,
         ).select_related("result").order_by("-created_at")
 
         for ar in qs:
             value = (ar.analysis_result or "").strip()
-            if not value:
-                continue
+            if not value: continue
 
-            title = ar.result.title if ar.result else "Analiz"
-            norma = ar.result.norma if ar.result else "-"
-
+            title = ar.result.title if ar.result else "—"
             key = title
 
-            if key in seen:
-                continue
+            if key in seen: continue
             seen.add(key)
 
             results_list.append({
                 "title": title,
                 "value": value,
-                "norma": norma
+                "norma": ar.result.norma if ar.result else "-"
             })
 
         if not results_list:
