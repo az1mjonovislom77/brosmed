@@ -29,8 +29,6 @@ def generate_pdf(request):
     parts = [name, last, middle, str(pid)]
     filename = "_".join([p for p in parts if p]).replace(" ", "_")
 
-    filename = filename.encode("ascii", "ignore").decode()
-
     docx_filename = filename + ".docx"
     docx_path = os.path.join(export_dir, docx_filename)
 
