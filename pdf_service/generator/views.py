@@ -27,7 +27,7 @@ def generate_pdf(request):
     middle = patient.get("middle_name") or ""
     pid = patient.get("id")
 
-    filename = f"{name}_{last}_{middle}_{pid}.pdf"
+    filename = f"{name}_{last}_{middle}_{pid}.docx"
     filename = filename.replace(" ", "_").replace("__", "_")
     filename = filename.encode("utf-8").decode("utf-8")
     docx_path = os.path.join(export_dir, filename)
