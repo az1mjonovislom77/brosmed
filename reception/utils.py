@@ -6,7 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from django.http import FileResponse
 from django.conf import settings
 from pdf_service.generator.pdf_utils import convert_docx_to_pdf, create_analysis_docx
-from .models import Patient, AnalysisResult, Analysis, User
+from .models import Patient, AnalysisResult, Analysis
 from .serializers import ExportAnalysisSerializer
 from drf_spectacular.utils import extend_schema
 
