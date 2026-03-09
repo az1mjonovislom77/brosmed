@@ -12,11 +12,8 @@ def convert_docx_to_pdf(docx_path: str):
     output_dir = os.path.dirname(docx_path)
 
     subprocess.run(
-        ["/usr/bin/unoconv", "-f", "pdf", "-o", output_dir, docx_path],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=True
-    )
+        ["libreoffice", "--headless", "--convert-to", "pdf", "--outdir",
+         output_dir, docx_path], check=True)
 
     return docx_path.replace(".docx", ".pdf")
 
