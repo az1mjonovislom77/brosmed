@@ -41,6 +41,7 @@ def create_analysis_docx(
     style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
     style.font.size = Pt(11)
 
+    # HEADER LOGO
     if header_image_path is None:
         header_image_path = "/home/brosmed/laboratory/logo.jpg"
 
@@ -72,38 +73,38 @@ def create_analysis_docx(
         run_text = p_text.add_run(text)
         run_text.font.size = Pt(10)
 
+    # PATIENT INFO TABLE
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = "Table Grid"
 
+    full_name = f"{patient.name or ''} {patient.last_name or ''} {patient.middle_name or ''}"
+
     info_table.cell(0, 0).text = "Bemor I.F.O"
-    info_table.cell(0, 1).text = (
-        f"{patient.get('name','')} "
-        f"{patient.get('last_name','')} "
-        f"{patient.get('middle_name','')}"
-    )
+    info_table.cell(0, 1).text = full_name.strip()
 
     info_table.cell(1, 0).text = "Tugilgan sanasi"
-    info_table.cell(1, 1).text = patient.get("birth_date", "")
+    info_table.cell(1, 1).text = str(patient.birth_date or "")
 
     info_table.cell(2, 0).text = "Telefon raqami"
-    info_table.cell(2, 1).text = patient.get("phone_number", "")
+    info_table.cell(2, 1).text = patient.phone_number or ""
 
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
-    info_table.cell(3, 1).text = analysis.get("created_at", "")
+    info_table.cell(3, 1).text = str(analysis.created_at or "")
 
+    # TITLE
     subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.get('id')}\n")
+    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.id}\n")
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
+    # CLEAN RESULTS
     valid_results = []
     seen_titles = set()
 
     for item in results_list:
 
         title = item.get("title", "").strip()
-
         if not title:
             continue
 
@@ -113,7 +114,6 @@ def create_analysis_docx(
         seen_titles.add(title)
 
         value = str(item.get("value", "")).strip()
-
         if not value:
             continue
 
@@ -134,6 +134,7 @@ def create_analysis_docx(
             "norma": norma
         })
 
+    # RESULTS TABLE
     if not valid_results:
 
         p = doc.add_paragraph("Natija hali kiritilmagan")
@@ -159,12 +160,15 @@ def create_analysis_docx(
             row[1].text = item["value"]
             row[2].text = item["norma"]
 
+    # SIGNATURE
     sign_table = doc.add_table(rows=1, cols=2)
 
     left_cell = sign_table.cell(0, 0)
     left_cell.paragraphs[0].add_run("Врач лаборант: _____________________")
 
     right_cell = sign_table.cell(0, 1)
-    right_cell.paragraphs[0].add_run(analysis.get("doctor", ""))
+
+    doctor = getattr(analysis, "doctor", "")
+    right_cell.paragraphs[0].add_run(str(doctor))
 
     doc.save(output_path)
