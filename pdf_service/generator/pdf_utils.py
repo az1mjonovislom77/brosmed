@@ -27,7 +27,6 @@ def create_analysis_docx(
         header_image_path=None,
         analysis_title="Analiz"
 ):
-
     doc = Document()
 
     section = doc.sections[0]
@@ -46,7 +45,6 @@ def create_analysis_docx(
         header_image_path = "/home/brosmed/laboratory/logo.jpg"
 
     if os.path.exists(header_image_path):
-
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -73,32 +71,29 @@ def create_analysis_docx(
         run_text = p_text.add_run(text)
         run_text.font.size = Pt(10)
 
-    # PATIENT INFO TABLE
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = "Table Grid"
 
-    full_name = f"{patient.name or ''} {patient.last_name or ''} {patient.middle_name or ''}"
+    full_name = f"{patient.get('name', '')} {patient.get('last_name', '')} {patient.get('middle_name', '')}"
 
     info_table.cell(0, 0).text = "Bemor I.F.O"
     info_table.cell(0, 1).text = full_name.strip()
 
     info_table.cell(1, 0).text = "Tugilgan sanasi"
-    info_table.cell(1, 1).text = str(patient.birth_date or "")
+    info_table.cell(1, 1).text = str(patient.get("birth_date", ""))
 
     info_table.cell(2, 0).text = "Telefon raqami"
-    info_table.cell(2, 1).text = patient.phone_number or ""
+    info_table.cell(2, 1).text = patient.get("birth_date", "")
 
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
-    info_table.cell(3, 1).text = str(analysis.created_at or "")
+    info_table.cell(3, 1).text = str(analysis.get("created_at", ""))
 
-    # TITLE
     subtitle = doc.add_paragraph()
-    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.id}\n")
+    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.get("id", "")}\n")
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # CLEAN RESULTS
     valid_results = []
     seen_titles = set()
 
@@ -134,7 +129,6 @@ def create_analysis_docx(
             "norma": norma
         })
 
-    # RESULTS TABLE
     if not valid_results:
 
         p = doc.add_paragraph("Natija hali kiritilmagan")
@@ -153,7 +147,6 @@ def create_analysis_docx(
         hdr[2].text = "Норма"
 
         for item in valid_results:
-
             row = table.add_row().cells
 
             row[0].text = item["title"]
