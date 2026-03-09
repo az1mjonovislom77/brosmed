@@ -49,13 +49,14 @@ def export_analysis_by_phone(request):
         if not analysis.department_types_id:
             continue
 
+        result_ids = analysis.department_types.result.values_list("id", flat=True)
+
         qs = (
             AnalysisResult.objects.filter(
                 patient=patient,
-                result__department_types_id=analysis.department_types_id
+                result_id__in=result_ids
             )
             .select_related("result")
-            .order_by("created_at")
         )
 
         for ar in qs:
@@ -75,7 +76,6 @@ def export_analysis_by_phone(request):
 
         if not results_list:
             continue
-
         data = {
             "patient": {
                 "id": patient.id,
