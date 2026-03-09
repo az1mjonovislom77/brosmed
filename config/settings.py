@@ -16,6 +16,8 @@ AUTH_USER_MODEL = 'user.User'
 
 ENVIRONMENT = config('ENVIRONMENT', default='local')
 
+CORS_ALLOW_ALL_ORIGINS = True
+
 LOCAL_APPS = [
     'jazzmin',
     'modeltranslation',
