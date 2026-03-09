@@ -89,6 +89,12 @@ class Analysis(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["status"]),
+        ]
+
     def __str__(self):
         return str(self.id)
 
@@ -106,6 +112,11 @@ class AnalysisResult(models.Model):
     patient = models.ForeignKey(Patient, null=True, blank=True, on_delete=models.SET_NULL)
     analysis_result = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at"])
+        ]
 
     def __str__(self):
         return self.analysis_result

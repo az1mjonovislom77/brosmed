@@ -1,20 +1,15 @@
 import json
-import math
-
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-
 from drf_spectacular.utils import extend_schema
-
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-
 from laboratory.serializers import (
     AnalysisSerializer,
     AnalysisPostSerializer,
@@ -22,7 +17,6 @@ from laboratory.serializers import (
     AnalysisFullDetailSerializer,
     AnalysisDetailInputSerializer,
 )
-
 from reception.models import Analysis, Patient
 from user.views.user_views import PartialPutMixin
 
@@ -58,7 +52,8 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
     def get_queryset(self):
         return (
-            Analysis.objects.select_related("patient")
+            Analysis.objects
+            .select_related("patient")
             .prefetch_related("department_types")
         )
 
@@ -69,31 +64,70 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
-        today = timezone.now().date()
+        now = timezone.now()
+        today = now.date()
+
+        start = timezone.make_aware(
+            timezone.datetime.combine(today, timezone.datetime.min.time())
+        )
+        end = start + timezone.timedelta(days=1)
 
         qs = self.get_queryset()
 
         counts = qs.aggregate(
             jami_tahlil=Count("id"),
-            kunlik_tahlil=Count("id", filter=Q(created_at__date=today)),
+
+            kunlik_tahlil=Count(
+                "id",
+                filter=Q(created_at__gte=start, created_at__lt=end)
+            ),
+
             yangi_tahlil=Count(
                 "id",
-                filter=Q(status=Analysis.Status.new, created_at__date=today),
+                filter=Q(
+                    status=Analysis.Status.new,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
             ),
+
             jarayondagi_tahlil=Count(
                 "id",
-                filter=Q(status=Analysis.Status.in_progress, created_at__date=today),
+                filter=Q(
+                    status=Analysis.Status.in_progress,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
             ),
+
             yakunlangan_tahlil=Count(
                 "id",
-                filter=Q(status=Analysis.Status.finished, created_at__date=today),
+                filter=Q(
+                    status=Analysis.Status.finished,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
             ),
         )
 
-        last_analysis = qs.order_by("-created_at")[:10]
+        last_analysis = (
+            qs.only(
+                "id",
+                "status",
+                "created_at",
+                "patient__id",
+                "patient__name",
+                "patient__last_name",
+                "patient__middle_name",
+                "patient__phone_number",
+            )
+            .order_by("-created_at")[:10]
+        )
 
         counts["oxirgi_tahlillar"] = AnalysisSerializer(
-            last_analysis, many=True, context={"request": request}
+            last_analysis,
+            many=True,
+            context={"request": request},
         ).data
 
         return Response(counts, status=status.HTTP_200_OK)
@@ -133,9 +167,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
             )
         )
 
-        output = AnalysisSerializer(
-            queryset, many=True, context={"request": request}
-        )
+        output = AnalysisSerializer(queryset, many=True, context={"request": request})
 
         return Response(output.data, status=status.HTTP_200_OK)
 
@@ -155,7 +187,8 @@ def check_patient(request):
         return JsonResponse({"error": "patient_id required"}, status=400)
 
     patient = (
-        Patient.objects.filter(id=patient_id)
+        Patient.objects
+        .filter(id=patient_id)
         .only("id", "name", "last_name", "middle_name")
         .first()
     )
@@ -203,7 +236,8 @@ class AnalysisDetailByPatient(APIView):
         analysis_id = serializer.validated_data["analysis_id"]
 
         patient = (
-            Patient.objects.filter(id=patient_id)
+            Patient.objects
+            .filter(id=patient_id)
             .only("id")
             .first()
         )
@@ -212,7 +246,8 @@ class AnalysisDetailByPatient(APIView):
             return Response({"error": "Patient topilmadi"}, status=404)
 
         analysis = (
-            Analysis.objects.select_related("patient")
+            Analysis.objects
+            .select_related("patient")
             .prefetch_related("department_types")
             .filter(id=analysis_id, patient=patient)
             .first()
@@ -225,7 +260,8 @@ class AnalysisDetailByPatient(APIView):
             )
 
         output = AnalysisFullDetailSerializer(
-            analysis, context={"request": request}
+            analysis,
+            context={"request": request},
         )
 
         return Response(output.data, status=200)
