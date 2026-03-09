@@ -45,25 +45,27 @@ def export_analysis_by_phone(request):
     for analysis in analyses:
 
         results_list = []
-        seen = set()
 
-        qs = (AnalysisResult.objects.filter(patient=patient, result__department_types=analysis.department_types)
-              .select_related("result").order_by("-created_at"))
+        if not analysis.department_types_id:
+            continue
+
+        qs = (
+            AnalysisResult.objects.filter(
+                patient=patient,
+                result__department_types_id=analysis.department_types_id
+            )
+            .select_related("result")
+            .order_by("created_at")
+        )
 
         for ar in qs:
 
             value = (ar.analysis_result or "").strip()
-
             if not value:
                 continue
 
             title = ar.result.title if ar.result else "Analiz"
             norma = ar.result.norma if ar.result else "-"
-
-            if title in seen:
-                continue
-
-            seen.add(title)
 
             results_list.append({
                 "title": title,
@@ -85,7 +87,7 @@ def export_analysis_by_phone(request):
             },
             "analysis": {
                 "id": analysis.id,
-                "title": analysis.department_types.title,
+                "title": analysis.department_types.title if analysis.department_types else "Analysis",
                 "created_at": str(analysis.created_at)
             },
             "results": results_list
@@ -93,11 +95,7 @@ def export_analysis_by_phone(request):
 
         try:
 
-            response = requests.post(
-                "http://127.0.0.1:9000/pdf/generate/",
-                json=data,
-                timeout=60
-            )
+            response = requests.post("http://127.0.0.1:9000/pdf/generate/", json=data, timeout=60)
 
             response.raise_for_status()
 
