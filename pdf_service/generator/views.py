@@ -1,6 +1,6 @@
 import os
 import json
-import uuid
+from urllib.parse import unquote
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -23,11 +23,13 @@ def generate_pdf(request):
 
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
     os.makedirs(export_dir, exist_ok=True)
-    filename = (
-        f"{patient['name']}_{patient['last_name']}_{patient['middle_name']}_{patient['id']}.docx"
-    )
+    name = patient.get("name") or ""
+    last = patient.get("last_name") or ""
+    middle = patient.get("middle_name") or ""
+    pid = patient.get("id")
 
-    filename = filename.replace(" ", "_")
+    filename = f"{name}_{last}_{middle}_{pid}.pdf"
+    filename = filename.replace(" ", "_").replace("__", "_")
     docx_path = os.path.join(export_dir, filename)
 
     create_analysis_docx(
@@ -45,5 +47,6 @@ def generate_pdf(request):
         os.remove(docx_path)
 
     pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}")
+    pdf_url = unquote(pdf_url)
 
     return JsonResponse({"url": pdf_url})
