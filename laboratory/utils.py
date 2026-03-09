@@ -114,6 +114,8 @@ def export_analysis_by_phone(request):
 
         try:
 
+            logger.error(f"PDF DATA: {data}")
+
             response = requests.post(
                 "http://127.0.0.1:9000/pdf/generate/",
                 json=data,
@@ -123,7 +125,6 @@ def export_analysis_by_phone(request):
             response.raise_for_status()
 
             pdf_url = response.json().get("url")
-
         except Exception:
             logger.exception("PDF SERVICE ERROR")
             return JsonResponse({"error": "PDF generation failed"}, status=500)
