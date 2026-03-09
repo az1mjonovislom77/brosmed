@@ -29,15 +29,15 @@ class Patient(models.Model):
     middle_name = models.CharField(max_length=100, null=True, blank=True)
     gender = models.CharField(max_length=100, choices=GenderChoice.choices, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
-    phone_number = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     self_disease = models.TextField(max_length=100, null=True, blank=True)
     passport = models.CharField(max_length=100, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     payment_status = models.CharField(max_length=100, choices=PaymentStatus.choices, default=PaymentStatus.pending)
     patient_status = models.CharField(max_length=100, choices=PatientStatus.choices, default=PatientStatus.in_register)
-    partial_payment_amount = models.FloatField(default=0)
-    total_amount = models.FloatField(default=0)
-    paid_amount = models.FloatField(default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    partial_payment_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -55,7 +55,7 @@ class Patient(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name + ' ' + self.last_name
+        return f"{self.name or ''} {self.last_name or ''}".strip()
 
 
 class Disease(models.Model):
@@ -66,9 +66,8 @@ class Disease(models.Model):
     disease = models.TextField(max_length=100, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if self.patient:
-            self.patient.patient_status = Patient.PatientStatus.in_register
-            self.patient.save()
+        if self.patient_id:
+            Patient.objects.filter(id=self.patient_id).update(patient_status=Patient.PatientStatus.in_register)
 
         super().save(*args, **kwargs)
 
@@ -93,6 +92,7 @@ class Analysis(models.Model):
         indexes = [
             models.Index(fields=["created_at"]),
             models.Index(fields=["status"]),
+            models.Index(fields=["status", "created_at"]),
         ]
 
     def __str__(self):
@@ -100,7 +100,7 @@ class Analysis(models.Model):
 
 
 class AnalysisFile(models.Model):
-    analysis = models.ForeignKey(Analysis, null=True, blank=True, on_delete=models.SET_NULL)
+    analysis = models.ForeignKey(Analysis, null=True, blank=True, on_delete=models.CASCADE)
     file = models.FileField(upload_to='analysis/', null=True, blank=True)
 
     def __str__(self):

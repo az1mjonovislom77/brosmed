@@ -17,7 +17,7 @@ from laboratory.serializers import (
     AnalysisFullDetailSerializer,
     AnalysisDetailInputSerializer,
 )
-
+from django.core.cache import cache
 from reception.models import Analysis, Patient
 from user.views.user_views import PartialPutMixin
 
@@ -64,27 +64,73 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
-        today = timezone.now().date()
+
+        cache_key = "analysis:stats"
+
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached, status=status.HTTP_200_OK)
+
+        now = timezone.now()
+
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timezone.timedelta(days=1)
 
         qs = self.get_queryset()
 
         counts = qs.aggregate(
             jami_tahlil=Count("id"),
-            kunlik_tahlil=Count("id", filter=Q(created_at__date=today)),
-            yangi_tahlil=Count("id", filter=Q(status=Analysis.Status.new, created_at__date=today), ),
-            jarayondagi_tahlil=Count("id",
-                                     filter=Q(status=Analysis.Status.in_progress, created_at__date=today)),
+
+            kunlik_tahlil=Count(
+                "id",
+                filter=Q(created_at__gte=start, created_at__lt=end)
+            ),
+
+            yangi_tahlil=Count(
+                "id",
+                filter=Q(
+                    status=Analysis.Status.new,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
+            ),
+
+            jarayondagi_tahlil=Count(
+                "id",
+                filter=Q(
+                    status=Analysis.Status.in_progress,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
+            ),
+
             yakunlangan_tahlil=Count(
                 "id",
-                filter=Q(status=Analysis.Status.finished, created_at__date=today),
+                filter=Q(
+                    status=Analysis.Status.finished,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
             ),
         )
 
-        last_analysis = qs.order_by("-created_at")[:10]
+        last_analysis = (
+            qs.only(
+                "id",
+                "status",
+                "created_at",
+                "patient__id",
+                "patient__name",
+                "patient__last_name",
+                "patient__middle_name",
+                "patient__phone_number",
+            )
+            .order_by("-created_at")[:10]
+        )
 
-        counts["oxirgi_tahlillar"] = AnalysisSerializer(
-            last_analysis, many=True, context={"request": request}
-        ).data
+        counts["oxirgi_tahlillar"] = AnalysisSerializer(last_analysis, many=True, context={"request": request}, ).data
+
+        cache.set(cache_key, counts, 60)
 
         return Response(counts, status=status.HTTP_200_OK)
 
@@ -128,6 +174,18 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         )
 
         return Response(output.data, status=status.HTTP_200_OK)
+
+    def perform_create(self, serializer):
+        cache.delete("analysis_stats")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        cache.delete("analysis_stats")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        cache.delete("analysis_stats")
+        instance.delete()
 
 
 @csrf_exempt
