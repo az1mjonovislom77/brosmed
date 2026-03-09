@@ -6,7 +6,6 @@ from aiogram.filters import Command
 from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import aiofiles
 from decouple import config
-
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -35,30 +34,21 @@ def main_menu_kb():
     )
 
 
-def departments_kb(departments):
-    buttons = [[KeyboardButton(text=d["title"])] for d in departments]
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
-
-
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     user_state[message.chat.id] = {"step": "patient_id"}
     await message.answer(
         "Assalomu alaykum!\n\n"
-        "Bemor ID raqamini kiriting (masalan: 12547):",
+        "Bemor ID raqamini kiriting:",
         reply_markup=ReplyKeyboardRemove()
     )
 
 
 @dp.message()
 async def handle_message(message: types.Message):
+
     chat_id = message.chat.id
-
-    if not message.text:
-        await message.answer("Iltimos, faqat raqam kiriting.")
-        return
-
-    text = message.text.strip()
+    text = (message.text or "").strip()
 
     if chat_id not in user_state:
         user_state[chat_id] = {"step": "patient_id"}
@@ -71,19 +61,21 @@ async def handle_message(message: types.Message):
         return
 
     if state["step"] == "patient_id":
+
         if not text.isdigit():
             await message.answer("ID faqat raqamlardan iborat bo‘lishi kerak.")
             return
 
-        state["patient_id"] = int(text)
+        patient_id = int(text)
+        state["patient_id"] = patient_id
+
         await message.answer("Tekshirilmoqda...")
 
         try:
-            async with httpx.AsyncClient(timeout=120) as client:
-                resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": state["patient_id"]})
 
-                logging.error(f"CHECK STATUS: {resp.status_code}")
-                logging.error(f"CHECK BODY: {resp.text}")
+            async with httpx.AsyncClient(timeout=120) as client:
+
+                resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": patient_id})
 
                 if resp.status_code != 200:
                     await message.answer("Bemor topilmadi.")
@@ -92,129 +84,70 @@ async def handle_message(message: types.Message):
                 data = resp.json()
                 patient = data.get("patient", {})
 
-                state["patient_name"] = patient.get("full_name", "patient")
+                patient_name = patient.get("full_name") or "patient"
+                patient_name = patient_name.replace(" ", "_")
+
+                state["patient_name"] = patient_name
 
                 await message.answer(
-                    f"Bemor topildi: {state['patient_name']}\n"
+                    f"Bemor topildi: {patient_name}\n"
                     f"Tahlillar yuklanmoqda..."
                 )
 
-                export = await client.post(EXPORT_ANALYSIS_URL, json={"patient_id": state["patient_id"]})
-
-                if export.status_code == 404:
-                    await message.answer("Bu bemor uchun tahlillar topilmadi.")
-                    return
+                export = await client.post(EXPORT_ANALYSIS_URL, json={"patient_id": patient_id})
 
                 if export.status_code != 200:
-                    await message.answer("Serverda xatolik yuz berdi. Keyinroq urinib ko‘ring.")
+                    await message.answer("Server xatoligi.")
                     return
 
-                try:
-                    data = export.json()
-                except Exception:
-                    await message.answer("Server noto‘g‘ri javob qaytardi.")
-                    return
-
+                data = export.json()
                 files = data.get("files", [])
 
                 if not files:
-                    await message.answer("Bu bemorda tahlil topilmadi.")
+                    await message.answer("Tahlil topilmadi.")
                     return
 
                 await message.answer(f"{len(files)} ta tahlil topildi. Yuborilmoqda...")
 
-                for f in files:
+                for index, f in enumerate(files, start=1):
+
                     url = f["url"]
-                    filename = f["filename"]
+                    original_filename = f["filename"]
+
+                    ext = os.path.splitext(original_filename)[1] or ".pdf"
+
+                    filename = f"{patient_name}_{index}{ext}"
+                    temp_path = os.path.join(TEMP_DIR, filename)
 
                     r = await client.get(url)
-                    temp = os.path.join(TEMP_DIR, filename)
 
-                    async with aiofiles.open(temp, "wb") as doc:
+                    if r.status_code != 200:
+                        await message.answer("Faylni yuklab bo‘lmadi.")
+                        continue
+
+                    async with aiofiles.open(temp_path, "wb") as doc:
                         await doc.write(r.content)
 
-                    await message.answer_document(FSInputFile(temp))
-                    os.remove(temp)
+                    await message.answer_document(FSInputFile(temp_path))
 
-                await message.answer("Barcha tahlillar yuborildi!", reply_markup=main_menu_kb())
+                    os.remove(temp_path)
 
-        except Exception as e:
-            print("Export xato:", repr(e))
-            await message.answer("Server bilan bog‘lanishda xatolik.Qayta uruning")
-            state["step"] = "patient_id"
-        return
+                    await asyncio.sleep(0.5)
 
-    if state["step"] == "choose_department":
-        selected = next((d for d in state["departments"] if d["title"] == text), None)
-
-        if not selected:
-            await message.answer("Iltimos, ro‘yxatdan bo‘lim tanlang.")
-            return
-
-        state["selected_dept"] = selected
-        state["step"] = "sending_files"
-
-        await message.answer(
-            f"{text} bo‘limi tanlandi.\nFayllar tayyorlanmoqda...",
-            reply_markup=ReplyKeyboardRemove()
-        )
-
-        try:
-            async with httpx.AsyncClient(timeout=60, follow_redirects=True, verify=False) as client:
-                resp = await client.post(
-                    EXPORT_ANALYSIS_URL,
-                    json={
-                        "patient_id": state["patient_id"],
-                        "department_type_id": selected["id"]
-                    }
+                await message.answer(
+                    "Barcha tahlillar yuborildi!",
+                    reply_markup=main_menu_kb()
                 )
 
-                if resp.status_code != 200:
-                    await message.answer("Tahlil fayllari topilmadi.")
-                    state["step"] = "choose_department"
-                    return
-
-                files = resp.json().get("files", [])
-
-                if not files:
-                    await message.answer("Bu bo‘limda tahlil topilmadi.")
-                else:
-                    await message.answer(f"{len(files)} ta tahlil topildi. Yuborilmoqda...")
-
-                    for file_info in files:
-                        url = file_info["url"]
-                        original_filename = file_info["filename"]
-
-                        ext = os.path.splitext(original_filename)[1] or ".docx"
-                        patient_name = state.get("patient_name", "patient")
-                        filename = f"{patient_name}{ext}"
-
-                        try:
-                            async with httpx.AsyncClient(timeout=60) as client:
-                                r = await client.get(url)
-                                if r.status_code == 200:
-                                    temp_path = os.path.join(TEMP_DIR, filename)
-                                    async with aiofiles.open(temp_path, "wb") as f:
-                                        await f.write(r.content)
-
-                                    await message.answer_document(FSInputFile(temp_path))
-                                    os.remove(temp_path)
-                                    await asyncio.sleep(1.2)
-                        except:
-                            await message.answer(f"Fayl yuborishda xato: {filename}")
-
-                    await message.answer("Barcha tahlillar yuborildi!", reply_markup=main_menu_kb())
-
         except Exception as e:
-            print("Export xato:", e)
-            await message.answer("Fayllar tayyorlashda xatolik yuz berdi.")
+            logging.exception(e)
+            await message.answer("Server bilan bog‘lanishda xatolik.")
 
-        state["step"] = "done"
-        return
+        state["step"] = "patient_id"
 
 
 async def main():
-    print("Bot ishga tushdi!")
+    print("Bot ishga tushdi")
     await dp.start_polling(bot)
 
 
