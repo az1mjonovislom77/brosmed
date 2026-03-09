@@ -45,36 +45,25 @@ def export_analysis_by_phone(request):
     for analysis in analyses:
 
         results_list = []
-        seen = set()
+        seen_titles = set()
 
-        analysis_start = analysis.created_at - timedelta(minutes=10)
-        analysis_end = analysis.created_at + timedelta(minutes=10)
-
-        qs = (
-            AnalysisResult.objects
-            .filter(
-                patient=patient,
-                result__department_types=analysis.department_types,
-                created_at__range=(analysis_start, analysis_end)
-            )
-            .select_related("result")
-            .order_by("-created_at")
-        )
+        qs = AnalysisResult.objects.filter(
+            patient=patient,
+            result__department_types=analysis.department_types,
+        ).select_related("result").order_by("-created_at")
 
         for ar in qs:
-
             value = (ar.analysis_result or "").strip()
-
             if not value:
                 continue
 
             title = ar.result.title if ar.result else "Analiz"
             norma = ar.result.norma if ar.result else "-"
 
-            if title in seen:
+            if title in seen_titles:
                 continue
 
-            seen.add(title)
+            seen_titles.add(title)
 
             results_list.append({
                 "title": title,
@@ -84,7 +73,6 @@ def export_analysis_by_phone(request):
 
         if not results_list:
             continue
-
         data = {
             "patient": {
                 "id": patient.id,
