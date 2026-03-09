@@ -51,12 +51,12 @@ def export_analysis_by_phone(request):
             AnalysisResult.objects
             .filter(
                 patient=patient,
-                analysis=analysis
+                result__department_types=analysis.department_types,
+                created_at__date=analysis.created_at.date()
             )
             .select_related("result")
             .order_by("-created_at")
         )
-
         for ar in qs:
 
             value = (ar.analysis_result or "").strip()
