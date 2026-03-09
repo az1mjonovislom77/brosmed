@@ -16,15 +16,15 @@ def generate_pdf(request):
     except Exception:
         return JsonResponse({"error": "Invalid JSON"}, status=400)
 
-    patient = body.get("patient") or {}
-    analysis = body.get("analysis") or {}
-    results = body.get("results") or []
+    patient = body.patient or {}
+    analysis = body.analysis or {}
+    results = body.results or []
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
     os.makedirs(export_dir, exist_ok=True)
-    name = patient.get("name") or ""
-    last = patient.get("last_name") or ""
-    middle = patient.get("middle_name") or ""
-    pid = patient.get("id") or ""
+    name = patient.name or ""
+    last = patient.last_name or ""
+    middle = patient.middle_name or ""
+    pid = patient.id or ""
 
     parts = [name, last, middle, str(pid)]
     filename = "_".join([p for p in parts if p]).replace(" ", "_")
