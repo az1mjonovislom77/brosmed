@@ -42,35 +42,36 @@ def export_analysis_by_phone(request):
 
     files_created = []
 
+    used = set()
+
     for analysis in analyses:
 
         results_list = []
-        seen = set()
 
-        qs = (AnalysisResult.objects.filter(patient=patient,
-                                            result__department_types=analysis.department_types, ).select_related(
-            "result").order_by("-created_at"))
+        qs = (
+            AnalysisResult.objects
+            .filter(
+                patient=patient,
+                result__department_types_id=analysis.department_types_id
+            )
+            .exclude(id__in=used)
+            .select_related("result")
+            .order_by("id")
+        )
 
         for ar in qs:
 
             value = (ar.analysis_result or "").strip()
-
             if not value:
                 continue
 
-            title = ar.result.title if ar.result else "Analiz"
-            norma = ar.result.norma if ar.result else "-"
-
-            if title in seen:
-                continue
-
-            seen.add(title)
-
             results_list.append({
-                "title": title,
+                "title": ar.result.title,
                 "value": value,
-                "norma": norma
+                "norma": ar.result.norma or "-"
             })
+
+            used.add(ar.id)
 
         if not results_list:
             continue
