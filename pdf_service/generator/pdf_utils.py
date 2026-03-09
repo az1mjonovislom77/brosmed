@@ -50,8 +50,12 @@ def create_analysis_docx(
     style.font.size = Pt(11)
 
     # HEADER
-    if header_image_path and os.path.exists(header_image_path):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+    if header_image_path is None:
+        header_image_path = os.path.join(BASE_DIR, "laboratory", "logo.png")
+
+    if os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -63,15 +67,13 @@ def create_analysis_docx(
         p_img = cell_img.paragraphs[0]
         run_img = p_img.add_run()
         run_img.add_picture(header_image_path, width=Inches(2.5))
+
         p_img.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
         cell_img.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
 
         cell_text = table.cell(0, 1)
         cell_text.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         p_text = cell_text.paragraphs[0]
-
-        p_text.space_before = Pt(0)
-        p_text.space_after = Pt(0)
 
         text = (
             "MANZIL: QARSHI SHAHAR KAT - MFY,\n"
