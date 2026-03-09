@@ -28,8 +28,9 @@ def generate_pdf(request):
     last = patient.get("last_name") or ""
     middle = patient.get("middle_name") or ""
     pid = patient.get("id") or ""
+    analysis_id = analysis.get("id") or ""
 
-    parts = [name, last, middle, str(pid)]
+    parts = [name, last, middle, str(pid), str(analysis_id)]
     filename = "_".join([p for p in parts if p]).replace(" ", "_")
 
     docx_filename = filename + ".docx"
