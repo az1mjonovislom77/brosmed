@@ -10,14 +10,33 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.contenttypes",
+    "django.contrib.staticfiles",
+    "generator",
+]
 
-    'generator'
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "https://brosmedcrm-gz9q.vercel.app",
+    "https://brosmed.uz",
+    "127.0.0.1"
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "https://brosmedcrm-gz9q.vercel.app",
+    "https://brosmed.uz",
+    "127.0.0.1"
 ]
 
 MIDDLEWARE = [
