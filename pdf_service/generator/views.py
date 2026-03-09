@@ -23,7 +23,11 @@ def generate_pdf(request):
 
     export_dir = os.path.join(settings.MEDIA_ROOT, "temp_exports")
     os.makedirs(export_dir, exist_ok=True)
-    filename = f"{uuid.uuid4()}.docx"
+    filename = (
+        f"{patient['name']}_{patient['last_name']}_{patient['middle_name']}_{patient['id']}.docx"
+    )
+
+    filename = filename.replace(" ", "_")
     docx_path = os.path.join(export_dir, filename)
 
     create_analysis_docx(

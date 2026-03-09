@@ -35,7 +35,6 @@ def create_analysis_docx(
         header_image_path=None,
         analysis_title="Analiz",
 ):
-
     doc = Document()
 
     section = doc.sections[0]
@@ -49,11 +48,8 @@ def create_analysis_docx(
     style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
     style.font.size = Pt(11)
 
-    # HEADER
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
     if header_image_path is None:
-        header_image_path = os.path.join(BASE_DIR, "laboratory", "logo.png")
+        header_image_path = "/home/brosmed/laboratory/logo.jpg"
 
     if os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
@@ -94,9 +90,9 @@ def create_analysis_docx(
 
     info_table.cell(0, 0).text = "Bemor I.F.O"
     info_table.cell(0, 1).text = (
-        f"{patient.get('name','')} "
-        f"{patient.get('last_name','')} "
-        f"{patient.get('middle_name','')}"
+        f"{patient.get('name', '')} "
+        f"{patient.get('last_name', '')} "
+        f"{patient.get('middle_name', '')}"
     )
 
     info_table.cell(1, 0).text = "Tugilgan sanasi"
@@ -196,7 +192,6 @@ def create_analysis_docx(
                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
                     for run in paragraph.runs:
-
                         run.font.name = "Times New Roman"
                         run.font.size = Pt(10)
 
