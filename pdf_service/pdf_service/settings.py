@@ -26,6 +26,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://brosmedcrm-gz9q.vercel.app",
     "https://brosmed.uz",
     "https://www.brosmed.uz",
+    "https://admin.brosmed.uz",
+    "https://www.admin.brosmed.uz",
+    "https://api.brosmed.uz",
+    "https://www.api.brosmed.uz",
     "http://127.0.0.1",
     "http://localhost",
 ]
@@ -39,6 +43,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://brosmedcrm-gz9q.vercel.app",
     "https://brosmed.uz",
     "https://www.brosmed.uz",
+    "https://admin.brosmed.uz",
+    "https://www.admin.brosmed.uz",
+    "https://api.brosmed.uz",
+    "https://www.api.brosmed.uz",
     "http://127.0.0.1",
     "http://localhost",
 ]
