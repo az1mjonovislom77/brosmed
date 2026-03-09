@@ -47,15 +47,18 @@ def export_analysis_by_phone(request):
         results_list = []
         seen = set()
 
+        analysis_start = analysis.created_at - timedelta(minutes=10)
+        analysis_end = analysis.created_at + timedelta(minutes=10)
+
         qs = (
             AnalysisResult.objects
             .filter(
                 patient=patient,
                 result__department_types=analysis.department_types,
-                created_at__gte=analysis.created_at
+                created_at__range=(analysis_start, analysis_end)
             )
             .select_related("result")
-            .order_by("created_at")
+            .order_by("-created_at")
         )
 
         for ar in qs:
