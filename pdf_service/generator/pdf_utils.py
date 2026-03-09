@@ -11,10 +11,12 @@ from docx.oxml.ns import qn
 def convert_docx_to_pdf(docx_path: str):
     output_dir = os.path.dirname(docx_path)
 
-    subprocess.run(["unoconv", "-f", "pdf", "-o", output_dir, docx_path],
-                   stdout=subprocess.DEVNULL,
-                   stderr=subprocess.DEVNULL,
-                   check=True)
+    subprocess.run(
+        ["/usr/bin/unoconv", "-f", "pdf", "-o", output_dir, docx_path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True
+    )
 
     return docx_path.replace(".docx", ".pdf")
 
