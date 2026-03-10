@@ -9,7 +9,6 @@ from docx.oxml.ns import qn
 
 
 def convert_docx_to_pdf(docx_path: str):
-
     output_dir = os.path.dirname(docx_path)
 
     subprocess.run(
@@ -36,7 +35,6 @@ def create_analysis_docx(
         header_image_path=None,
         analysis_title="Analiz"
 ):
-
     doc = Document()
 
     section = doc.sections[0]
@@ -55,7 +53,6 @@ def create_analysis_docx(
         header_image_path = "/home/brosmed/laboratory/logo.jpg"
 
     if os.path.exists(header_image_path):
-
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -88,9 +85,9 @@ def create_analysis_docx(
 
     info_table.cell(0, 0).text = "Bemor I.F.O"
     info_table.cell(0, 1).text = (
-        f"{patient.get('name','')} "
-        f"{patient.get('last_name','')} "
-        f"{patient.get('middle_name','')}"
+        f"{patient.get('name', '')} "
+        f"{patient.get('last_name', '')} "
+        f"{patient.get('middle_name', '')}"
     )
 
     info_table.cell(1, 0).text = "Tugilgan sanasi"
@@ -106,7 +103,7 @@ def create_analysis_docx(
     subtitle = doc.add_paragraph()
 
     subtitle_run = subtitle.add_run(
-        f"{analysis_title} : {patient.get('id','')}\n"
+        f"{analysis_title} : {patient.get('id', '')}\n"
     )
 
     subtitle_run.italic = True
@@ -170,8 +167,7 @@ def create_analysis_docx(
         hdr[1].text = "Результат анализа"
         hdr[2].text = "Норма"
 
-        for item in valid_results:
-
+        for item in reversed(valid_results):
             row = table.add_row().cells
 
             row[0].text = item["title"]
