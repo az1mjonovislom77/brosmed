@@ -142,13 +142,12 @@ def create_analysis_docx(
             .replace("Муж:", "М:")
         )
 
-        valid_results.append({
+        valid_results.insert(0, {
             "title": title,
             "value": value,
             "norma": norma
         })
 
-    # RESULTS TABLE
     if not valid_results:
 
         p = doc.add_paragraph("Natija hali kiritilmagan")
@@ -167,14 +166,13 @@ def create_analysis_docx(
         hdr[1].text = "Результат анализа"
         hdr[2].text = "Норма"
 
-        for item in reversed(valid_results):
+        for item in valid_results:
             row = table.add_row().cells
 
             row[0].text = item["title"]
             row[1].text = item["value"]
             row[2].text = item["norma"]
 
-    # SIGN
     sign_table = doc.add_table(rows=1, cols=2)
 
     left_cell = sign_table.cell(0, 0)
