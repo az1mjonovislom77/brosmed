@@ -11,30 +11,13 @@ from docx.oxml.ns import qn
 def convert_docx_to_pdf(docx_path: str):
     output_dir = os.path.dirname(docx_path)
 
-    subprocess.run(
-        [
-            "libreoffice",
-            "--headless",
-            "--convert-to",
-            "pdf",
-            "--outdir",
-            output_dir,
-            docx_path,
-        ],
-        check=True
-    )
+    subprocess.run(["libreoffice", "--headless", "--convert-to", "pdf", "--outdir",
+                    output_dir, docx_path], check=True)
 
     return docx_path.replace(".docx", ".pdf")
 
 
-def create_analysis_docx(
-        patient,
-        analysis,
-        results_list,
-        output_path,
-        header_image_path=None,
-        analysis_title="Analiz"
-):
+def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None, analysis_title="Analiz"):
     doc = Document()
 
     section = doc.sections[0]
@@ -48,7 +31,6 @@ def create_analysis_docx(
     style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
     style.font.size = Pt(11)
 
-    # HEADER LOGO
     if header_image_path is None:
         header_image_path = "/home/brosmed/laboratory/logo.jpg"
 
@@ -56,16 +38,12 @@ def create_analysis_docx(
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
-
         table.columns[0].width = Inches(3.4)
         table.columns[1].width = Inches(3.1)
-
         cell_img = table.cell(0, 0)
         run = cell_img.paragraphs[0].add_run()
         run.add_picture(header_image_path, width=Inches(2.5))
-
         cell_img.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-
         cell_text = table.cell(0, 1)
         p_text = cell_text.paragraphs[0]
 
@@ -79,7 +57,6 @@ def create_analysis_docx(
         run_text = p_text.add_run(text)
         run_text.font.size = Pt(10)
 
-    # PATIENT INFO
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = "Table Grid"
 
@@ -97,20 +74,20 @@ def create_analysis_docx(
     info_table.cell(2, 1).text = patient.get("phone_number", "")
 
     info_table.cell(3, 0).text = "Tekshiruv sanasi"
-    info_table.cell(3, 1).text = str(analysis.get("created_at", ""))
+    created = analysis.get("created_at", "")
+    if created:
+        created = created.split(".")[0]
+        created = created.replace("T", " ")
 
-    # TITLE
+    info_table.cell(3, 1).text = created
+
     subtitle = doc.add_paragraph()
 
-    subtitle_run = subtitle.add_run(
-        f"{analysis_title} : {patient.get('id', '')}\n"
-    )
-
+    subtitle_run = subtitle.add_run(f"{analysis_title} : {patient.get('id', '')}\n")
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # RESULTS CLEANING
     valid_results = []
     seen_titles = set()
 
