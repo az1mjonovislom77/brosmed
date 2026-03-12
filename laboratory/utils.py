@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def export_analysis_by_phone(request):
-
     if request.method != "POST":
         return JsonResponse({"error": "Only POST"}, status=405)
 
@@ -46,7 +45,6 @@ def export_analysis_by_phone(request):
     files_created = []
 
     for analysis in analyses:
-
         if not analysis.department_types:
             continue
 
@@ -55,13 +53,9 @@ def export_analysis_by_phone(request):
 
         qs = (
             AnalysisResult.objects
-            .filter(
-                patient=patient,
-                result__department_types=analysis.department_types
-            )
+            .filter(patient=patient, result__department_types=analysis.department_types)
             .select_related("result")
-            .order_by("-created_at")
-        )
+            .order_by("-created_at"))
 
         for ar in qs:
 
@@ -108,25 +102,17 @@ def export_analysis_by_phone(request):
                 "id": analysis.id,
                 "title": analysis.department_types.title,
                 "created_at": str(analysis.created_at)
-            },
-            "results": results_list
-        }
+            }, "results": results_list}
 
         try:
-
             logger.error(f"PDF DATA: {data}")
 
-            response = requests.post(
-                "http://127.0.0.1:9000/pdf/generate/",
-                json=data,
-                timeout=60
-            )
-
+            response = requests.post("http://127.0.0.1:9000/pdf/generate/", json=data, timeout=60)
             response.raise_for_status()
-
             pdf_url = response.json().get("url")
         except Exception:
             logger.exception("PDF SERVICE ERROR")
+
             return JsonResponse({"error": "PDF generation failed"}, status=500)
 
         files_created.append({
