@@ -93,8 +93,7 @@ class ClinicLastWeekAPIView(APIView):
                 "tahlillar": Analysis.objects.filter(created_at__date=day).count(),
                 "tolovlar": Patient.objects.filter(payment_status=Patient.PaymentStatus.confirmed,
                                                    updated_at__date=day).aggregate(total=Sum('paid_amount'))[
-                                'total'] or 0.0
-            })
+                                'total'] or 0.0})
 
         return Response(results)
 

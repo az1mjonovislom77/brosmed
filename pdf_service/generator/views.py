@@ -8,10 +8,8 @@ from .pdf_utils import create_analysis_docx, convert_docx_to_pdf
 
 @csrf_exempt
 def generate_pdf(request):
-
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
-
     try:
         body = json.loads(request.body)
     except Exception:
@@ -50,8 +48,6 @@ def generate_pdf(request):
     if os.path.exists(docx_path):
         os.remove(docx_path)
 
-    pdf_url = request.build_absolute_uri(
-        f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
-    )
+    pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}")
 
     return JsonResponse({"url": pdf_url})
