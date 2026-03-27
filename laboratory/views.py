@@ -1,5 +1,5 @@
 import json
-from django.db.models import Q, Count
+from django.db.models import Count, Q, Sum, Case, When, IntegerField
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -46,7 +46,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     pagination_class = AnalysisPagination
 
     def get_queryset(self):
-        return (Analysis.objects.select_related("patient").prefetch_related("department_types"))
+        return Analysis.objects.select_related("patient")
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -56,42 +56,86 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     @action(detail=False, methods=["get"])
     def stats(self, request):
         cache_key = "analysis:stats"
-        cached = cache.get(cache_key)
-        if cached:
-            return Response(cached, status=status.HTTP_200_OK)
+        data = cache.get(cache_key)
+        if data:
+            return Response(data, status=status.HTTP_200_OK)
 
         now = timezone.now()
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timezone.timedelta(days=1)
+
         qs = self.get_queryset()
 
         counts = qs.aggregate(
             jami_tahlil=Count("id"),
 
-            kunlik_tahlil=Count(
-                "id", filter=Q(created_at__gte=start, created_at__lt=end)),
+            kunlik_tahlil=Sum(
+                Case(
+                    When(created_at__gte=start, created_at__lt=end, then=1),
+                    default=0,
+                    output_field=IntegerField()
+                )
+            ),
 
-            yangi_tahlil=Count(
-                "id", filter=Q(status=Analysis.Status.new, created_at__gte=start, created_at__lt=end)),
+            yangi_tahlil=Sum(
+                Case(
+                    When(
+                        status=Analysis.Status.new,
+                        created_at__gte=start,
+                        created_at__lt=end,
+                        then=1
+                    ),
+                    default=0,
+                    output_field=IntegerField()
+                )
+            ),
 
-            jarayondagi_tahlil=Count(
-                "id", filter=Q(status=Analysis.Status.in_progress, created_at__gte=start, created_at__lt=end)),
+            jarayondagi_tahlil=Sum(
+                Case(
+                    When(
+                        status=Analysis.Status.in_progress,
+                        created_at__gte=start,
+                        created_at__lt=end,
+                        then=1
+                    ),
+                    default=0,
+                    output_field=IntegerField()
+                )
+            ),
 
-            yakunlangan_tahlil=Count(
-                "id", filter=Q(status=Analysis.Status.finished, created_at__gte=start, created_at__lt=end)))
+            yakunlangan_tahlil=Sum(
+                Case(
+                    When(
+                        status=Analysis.Status.finished,
+                        created_at__gte=start,
+                        created_at__lt=end,
+                        then=1
+                    ),
+                    default=0,
+                    output_field=IntegerField()
+                )
+            ),
+        )
 
-        last_analysis = (
-            qs.only("id", "status", "created_at", "patient__id", "patient__name", "patient__last_name",
-                    "patient__middle_name", "patient__phone_number").order_by("-created_at")[:10])
+        # 🔹 LAST 10 (safe fields, no N+1)
+        last_analysis_qs = qs.order_by("-created_at")[:10]
 
-        counts["oxirgi_tahlillar"] = AnalysisSerializer(last_analysis, many=True, context={"request": request}, ).data
+        counts["oxirgi_tahlillar"] = AnalysisSerializer(
+            last_analysis_qs,
+            many=True,
+            context={"request": request}
+        ).data
 
-        cache.set(cache_key, counts, 60)
+        cache.set(cache_key, counts, timeout=60)
 
         return Response(counts, status=status.HTTP_200_OK)
 
-    @extend_schema(methods=["POST"], request=AnalysisSearchInputSerializer,
-                   responses={200: AnalysisSerializer(many=True)})
+    # 🔹 SEARCH (optimized + pagination + controlled prefetch)
+    @extend_schema(
+        methods=["POST"],
+        request=AnalysisSearchInputSerializer,
+        responses={200: AnalysisSerializer(many=True)}
+    )
     @action(detail=False, methods=["post"])
     def search(self, request):
         serializer = AnalysisSearchInputSerializer(data=request.data)
@@ -99,35 +143,44 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         search_value = serializer.validated_data["search"]
 
+        qs = self.get_queryset().prefetch_related("department_types")
+
         queryset = (
-            self.get_queryset()
-            .filter(
+            qs.filter(
                 Q(status__icontains=search_value)
                 | Q(patient__name__icontains=search_value)
                 | Q(patient__last_name__icontains=search_value)
                 | Q(patient__middle_name__icontains=search_value)
                 | Q(patient__phone_number__icontains=search_value)
                 | Q(department_types__title__icontains=search_value)
-            ).distinct()
-            .only("id", "status", "created_at", "patient__id", "patient__name", "patient__last_name",
-                  "patient__middle_name", "patient__phone_number"))
+            )
+            .distinct()
+        )
 
-        output = AnalysisSerializer(queryset, many=True, context={"request": request})
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = AnalysisSerializer(
+                page, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
 
-        return Response(output.data, status=status.HTTP_200_OK)
+        serializer = AnalysisSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # 🔹 CACHE INVALIDATION (fixed key)
     def perform_create(self, serializer):
-        cache.delete("analysis_stats")
+        cache.delete("analysis:stats")
         serializer.save()
 
     def perform_update(self, serializer):
-        cache.delete("analysis_stats")
+        cache.delete("analysis:stats")
         serializer.save()
 
     def perform_destroy(self, instance):
-        cache.delete("analysis_stats")
+        cache.delete("analysis:stats")
         instance.delete()
-
 
 @csrf_exempt
 def check_patient(request):
