@@ -44,35 +44,26 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     http_method_names = ["get", "post", "put", "delete"]
     pagination_class = AnalysisPagination
 
+    CACHE_KEY_STATS = "analysis:stats"
+    CACHE_TTL = 60
+
     def get_queryset(self):
         return Analysis.objects.select_related("patient")
 
     def get_serializer_class(self):
-        if self.request.method == "POST":
+        if self.action == "create":
             return AnalysisPostSerializer
-        return super().get_serializer_class()
+        return self.serializer_class
 
-    @action(detail=False, methods=["get"])
-    def stats(self, request):
-        cache_key = "analysis:stats"
-        data = cache.get(cache_key)
-        if data:
-            return Response(data, status=status.HTTP_200_OK)
-
-        now = timezone.now()
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end = start + timezone.timedelta(days=1)
-
-        qs = self.get_queryset()
-
-        counts = qs.aggregate(
+    def _get_stats_counts(self, qs, start, end):
+        return qs.aggregate(
             jami_tahlil=Count("id"),
 
             kunlik_tahlil=Sum(
                 Case(
                     When(created_at__gte=start, created_at__lt=end, then=1),
                     default=0,
-                    output_field=IntegerField()
+                    output_field=IntegerField(),
                 )
             ),
 
@@ -82,10 +73,10 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
                         status=Analysis.Status.new,
                         created_at__gte=start,
                         created_at__lt=end,
-                        then=1
+                        then=1,
                     ),
                     default=0,
-                    output_field=IntegerField()
+                    output_field=IntegerField(),
                 )
             ),
 
@@ -95,10 +86,10 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
                         status=Analysis.Status.in_progress,
                         created_at__gte=start,
                         created_at__lt=end,
-                        then=1
+                        then=1,
                     ),
                     default=0,
-                    output_field=IntegerField()
+                    output_field=IntegerField(),
                 )
             ),
 
@@ -108,73 +99,93 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
                         status=Analysis.Status.finished,
                         created_at__gte=start,
                         created_at__lt=end,
-                        then=1
+                        then=1,
                     ),
                     default=0,
-                    output_field=IntegerField()
+                    output_field=IntegerField(),
                 )
             ),
         )
 
-        last_analysis_qs = qs.order_by("-created_at")[:10]
+    def _get_last_analysis(self, qs):
+        return qs.order_by("-created_at")[:10]
+
+    @action(detail=False, methods=["get"])
+    def stats(self, request):
+        cached = cache.get(self.CACHE_KEY_STATS)
+        if cached is not None:
+            return Response(cached, status=status.HTTP_200_OK)
+
+        now = timezone.now()
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timezone.timedelta(days=1)
+
+        qs = self.get_queryset()
+
+        counts = self._get_stats_counts(qs, start, end)
+
+        last_analysis_qs = self._get_last_analysis(qs)
 
         counts["oxirgi_tahlillar"] = AnalysisSerializer(
             last_analysis_qs,
             many=True,
-            context={"request": request}).data
+            context={"request": request},
+        ).data
 
-        cache.set(cache_key, counts, timeout=60)
+        cache.set(self.CACHE_KEY_STATS, counts, self.CACHE_TTL)
 
         return Response(counts, status=status.HTTP_200_OK)
 
     @extend_schema(
         methods=["POST"],
         request=AnalysisSearchInputSerializer,
-        responses={200: AnalysisSerializer(many=True)}
+        responses={200: AnalysisSerializer(many=True)},
     )
     @action(detail=False, methods=["post"])
     def search(self, request):
-        serializer = AnalysisSearchInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        input_serializer = AnalysisSearchInputSerializer(data=request.data)
+        input_serializer.is_valid(raise_exception=True)
 
-        search_value = serializer.validated_data["search"]
+        search_value = input_serializer.validated_data["search"]
 
         qs = self.get_queryset().prefetch_related("department_types")
 
-        queryset = (
-            qs.filter(
-                Q(status__icontains=search_value)
-                | Q(patient__name__icontains=search_value)
-                | Q(patient__last_name__icontains=search_value)
-                | Q(patient__middle_name__icontains=search_value)
-                | Q(patient__phone_number__icontains=search_value)
-                | Q(department_types__title__icontains=search_value)
-            )
-            .distinct()
-        )
+        queryset = qs.filter(
+            Q(status__icontains=search_value)
+            | Q(patient__name__icontains=search_value)
+            | Q(patient__last_name__icontains=search_value)
+            | Q(patient__middle_name__icontains=search_value)
+            | Q(patient__phone_number__icontains=search_value)
+            | Q(department_types__title__icontains=search_value)
+        ).distinct()
 
         page = self.paginate_queryset(queryset)
+        serializer = AnalysisSerializer(
+            page if page is not None else queryset,
+            many=True,
+            context={"request": request},
+        )
+
         if page is not None:
-            serializer = AnalysisSerializer(
-                page, many=True, context={"request": request}
-            )
             return self.get_paginated_response(serializer.data)
 
-        serializer = AnalysisSerializer(
-            queryset, many=True, context={"request": request}
-        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def _invalidate_cache(self):
+        cache.delete(self.CACHE_KEY_STATS)
+
     def perform_create(self, serializer):
-        cache.delete("analysis:stats")
-        serializer.save()
+        instance = serializer.save()
+        self._invalidate_cache()
+        return instance
 
     def perform_update(self, serializer):
-        cache.delete("analysis:stats")
-        serializer.save()
+        instance = serializer.save()
+        self._invalidate_cache()
+        return instance
 
     def perform_destroy(self, instance):
-        cache.delete("analysis:stats")
+        self._invalidate_cache()
         instance.delete()
 
 
