@@ -116,20 +116,17 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
             ),
         )
 
-        # 🔹 LAST 10 (safe fields, no N+1)
         last_analysis_qs = qs.order_by("-created_at")[:10]
 
         counts["oxirgi_tahlillar"] = AnalysisSerializer(
             last_analysis_qs,
             many=True,
-            context={"request": request}
-        ).data
+            context={"request": request}).data
 
         cache.set(cache_key, counts, timeout=60)
 
         return Response(counts, status=status.HTTP_200_OK)
 
-    # 🔹 SEARCH (optimized + pagination + controlled prefetch)
     @extend_schema(
         methods=["POST"],
         request=AnalysisSearchInputSerializer,
@@ -168,7 +165,6 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 🔹 CACHE INVALIDATION (fixed key)
     def perform_create(self, serializer):
         cache.delete("analysis:stats")
         serializer.save()
