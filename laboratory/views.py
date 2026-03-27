@@ -39,7 +39,6 @@ class AnalysisPagination(PageNumberPagination):
 
 @extend_schema(tags=["Analysis"])
 class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
-    queryset = Analysis.objects.all()
     serializer_class = AnalysisSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "put", "delete"]
@@ -181,6 +180,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     def perform_destroy(self, instance):
         cache.delete("analysis:stats")
         instance.delete()
+
 
 @csrf_exempt
 def check_patient(request):
