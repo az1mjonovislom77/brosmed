@@ -45,7 +45,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     pagination_class = AnalysisPagination
 
     CACHE_KEY_STATS = "analysis:stats"
-    CACHE_TTL = 60
+    CACHE_TTL = 300
 
     def get_queryset(self):
         return Analysis.objects.select_related("patient")
@@ -58,57 +58,34 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
     def _get_stats_counts(self, qs, start, end):
         return qs.aggregate(
             jami_tahlil=Count("id"),
+            kunlik_tahlil=Count("id", filter=Q(created_at__gte=start, created_at__lt=end)),
+            yangi_tahlil=Count("id",
+                               filter=Q(
+                                   status=Analysis.Status.new,
+                                   created_at__gte=start,
+                                   created_at__lt=end)),
 
-            kunlik_tahlil=Sum(
-                Case(
-                    When(created_at__gte=start, created_at__lt=end, then=1),
-                    default=0,
-                    output_field=IntegerField(),
-                )
+            jarayondagi_tahlil=Count(
+                "id",
+                filter=Q(
+                    status=Analysis.Status.in_progress,
+                    created_at__gte=start,
+                    created_at__lt=end,
+                ),
             ),
 
-            yangi_tahlil=Sum(
-                Case(
-                    When(
-                        status=Analysis.Status.new,
-                        created_at__gte=start,
-                        created_at__lt=end,
-                        then=1,
-                    ),
-                    default=0,
-                    output_field=IntegerField(),
-                )
-            ),
-
-            jarayondagi_tahlil=Sum(
-                Case(
-                    When(
-                        status=Analysis.Status.in_progress,
-                        created_at__gte=start,
-                        created_at__lt=end,
-                        then=1,
-                    ),
-                    default=0,
-                    output_field=IntegerField(),
-                )
-            ),
-
-            yakunlangan_tahlil=Sum(
-                Case(
-                    When(
-                        status=Analysis.Status.finished,
-                        created_at__gte=start,
-                        created_at__lt=end,
-                        then=1,
-                    ),
-                    default=0,
-                    output_field=IntegerField(),
-                )
+            yakunlangan_tahlil=Count(
+                "id",
+                filter=Q(status=Analysis.Status.finished, created_at__gte=start, created_at__lt=end),
             ),
         )
 
     def _get_last_analysis(self, qs):
-        return qs.order_by("-created_at")[:10]
+        return (
+            qs.select_related("patient")
+            .only("id", "status", "created_at", "patient__id", "patient__name", "patient__last_name", )
+            .order_by("-created_at")[:10]
+        )
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
@@ -122,8 +99,10 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
 
         qs = self.get_queryset()
 
+        # 🔥 faqat 1ta aggregate query
         counts = self._get_stats_counts(qs, start, end)
 
+        # 🔥 separate optimized query
         last_analysis_qs = self._get_last_analysis(qs)
 
         counts["oxirgi_tahlillar"] = AnalysisSerializer(
@@ -160,6 +139,7 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         ).distinct()
 
         page = self.paginate_queryset(queryset)
+
         serializer = AnalysisSerializer(
             page if page is not None else queryset,
             many=True,

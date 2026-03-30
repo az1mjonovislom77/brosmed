@@ -84,8 +84,8 @@ class Analysis(models.Model):
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='analysis')
     department_types = models.ForeignKey(DepartmentTypes, null=True, blank=True, on_delete=models.SET_NULL,
                                          related_name='department_types')
-    status = models.CharField(max_length=100, choices=Status.choices, default=Status.new)
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=100, choices=Status.choices, default=Status.new, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
