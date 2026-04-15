@@ -39,7 +39,7 @@ class BaseAnalysisSerializer(serializers.ModelSerializer):
 
 
 class AnalysisSerializer(BaseAnalysisSerializer):
-    department_types = DepartmentTypesSerializer(read_only=True)
+    department_types = DepartmentTypesNestSerializer(read_only=True)
     patient = PatientNestSerializer(read_only=True)
 
     class Meta:
