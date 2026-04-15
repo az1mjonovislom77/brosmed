@@ -59,31 +59,28 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         return qs.aggregate(
             jami_tahlil=Count("id"),
             kunlik_tahlil=Count("id", filter=Q(created_at__gte=start, created_at__lt=end)),
-            yangi_tahlil=Count("id",
-                               filter=Q(
-                                   status=Analysis.Status.new,
-                                   created_at__gte=start,
-                                   created_at__lt=end)),
+            yangi_tahlil=Count(
+                "id",
+                filter=Q(status=Analysis.Status.new),
+            ),
 
             jarayondagi_tahlil=Count(
                 "id",
                 filter=Q(
                     status=Analysis.Status.in_progress,
-                    created_at__gte=start,
-                    created_at__lt=end,
                 ),
             ),
 
             yakunlangan_tahlil=Count(
                 "id",
-                filter=Q(status=Analysis.Status.finished, created_at__gte=start, created_at__lt=end),
+                filter=Q(status=Analysis.Status.finished),
             ),
         )
 
     def _get_last_analysis(self, qs):
         return (
-            qs.select_related("patient")
-            .only("id", "status", "created_at", "patient__id", "patient__name", "patient__last_name", )
+            qs.select_related("patient", "department_types")
+            .prefetch_related("analysisfile_set")
             .order_by("-created_at")[:10]
         )
 
@@ -97,19 +94,11 @@ class AnalysisViewSet(viewsets.ModelViewSet, PartialPutMixin):
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timezone.timedelta(days=1)
 
-        qs = self.get_queryset()
-
-        # 🔥 faqat 1ta aggregate query
-        counts = self._get_stats_counts(qs, start, end)
-
-        # 🔥 separate optimized query
-        last_analysis_qs = self._get_last_analysis(qs)
-
-        counts["oxirgi_tahlillar"] = AnalysisSerializer(
-            last_analysis_qs,
-            many=True,
-            context={"request": request},
-        ).data
+        stats_qs = Analysis.objects.all()
+        counts = self._get_stats_counts(stats_qs, start, end)
+        list_qs = self.get_queryset()
+        last_analysis_qs = self._get_last_analysis(list_qs)
+        counts["oxirgi_tahlillar"] = AnalysisSerializer(last_analysis_qs, many=True, context={"request": request}).data
 
         cache.set(self.CACHE_KEY_STATS, counts, self.CACHE_TTL)
 
