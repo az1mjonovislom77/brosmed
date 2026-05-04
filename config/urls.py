@@ -9,12 +9,12 @@ from laboratory.api.views import check_patient
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('user.urls')),
-    path('department/', include('department.urls')),
-    path('utils/', include('utils.urls')),
-    path('doctor/', include('doctor.urls')),
-    path('reception/', include('reception.urls')),
-    path('laboratory/', include('laboratory.urls')),
-    path('cashier/', include('cashier.urls')),
+    path('department/', include('department.api.urls')),
+    path('utils/', include('utils.api.urls')),
+    path('doctor/', include('doctor.api.urls')),
+    path('reception/', include('reception.api.urls')),
+    path('laboratory/', include('laboratory.api.urls')),
+    path('cashier/', include('cashier.api.urls')),
     path('check-patient/', check_patient, name='check_patient'),
     path('export-by-phone/', export_analysis_by_phone, name='export_analysis'),
 
