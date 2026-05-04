@@ -3,8 +3,8 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.conf import settings
-from laboratory.utils import export_analysis_by_phone
-from laboratory.views import check_patient
+from laboratory.services.export import export_analysis_by_phone
+from laboratory.api.views import check_patient
 
 urlpatterns = [
     path('admin/', admin.site.urls),
