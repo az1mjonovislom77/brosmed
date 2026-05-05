@@ -4,6 +4,8 @@ services:
     container_name: main_app
     ports:
       - "8000:8000"
+    volumes:
+      - ./media:/app/media
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -15,6 +17,8 @@ services:
     container_name: pdf_service
     ports:
       - "8001:8001"
+    volumes:
+      - ./media:/app/media
 
   redis:
     image: redis:7-alpine
