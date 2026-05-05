@@ -2,7 +2,7 @@ name: Deploy Django to VPS
 
 on:
   workflow_run:
-    workflows: ["CI - Django Checks"]
+    workflows: [ "CI - Django Checks" ]
     types:
       - completed
 
@@ -28,20 +28,10 @@ jobs:
             echo "📥 Pulling latest code..."
             git pull origin main
 
-            echo "🐍 Activating venv..."
-            source venv/bin/activate
+            echo "🐳 Stopping old containers..."
+            docker compose down
 
-            echo "📦 Installing requirements..."
-            pip install -r requirements.txt
-
-            echo "🧱 Running migrations..."
-            python3 manage.py migrate --noinput
-
-            echo "🎨 Collecting static files..."
-            python3 manage.py collectstatic --noinput
-
-            echo "🔄 Restarting services..."
-            sudo systemctl restart ${{ secrets.SERVICE_NAME }}
-            sudo systemctl restart nginx
+            echo "🐳 Rebuilding and starting containers..."
+            docker compose up -d --build
 
             echo "✅ Deploy finished!"

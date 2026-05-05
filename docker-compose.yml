@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  main_app:
+    build: .
+    container_name: main_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - pdf_service
+      - db
+
+  pdf_service:
+    build: ./pdf_service
+    container_name: pdf_service
+    ports:
+      - "8001:8001"
+
+  db:
+    image: postgres:14
+    container_name: postgres
+    environment:
+      POSTGRES_DB: brosmed_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: YangiKuchliParol123
+    ports:
+      - "5432:5432"
