@@ -1,0 +1,2 @@
+Django==5.2.8
+python_docx==1.2.0
