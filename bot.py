@@ -108,7 +108,7 @@ async def handle_message(message: types.Message):
 
                     ext = os.path.splitext(original_filename)[1] or ".pdf"
                     filename = f"{patient_name}_{index}{ext}"
-
+                    print(url)
                     r = await client.get(url)
 
                     if r.status_code != 200:
