@@ -23,5 +23,3 @@ services:
       POSTGRES_DB: brosmed_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: YangiKuchliParol123
-    ports:
-      - "5432:5432"
