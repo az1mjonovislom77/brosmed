@@ -7,10 +7,10 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
-      - pdf_service
+      - pdfservice
       - redis
 
-  pdf_service:
+  pdfservice:
     build: ./pdf_service
     container_name: pdf_service
     ports:
