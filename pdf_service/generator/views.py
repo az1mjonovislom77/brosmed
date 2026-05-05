@@ -48,6 +48,6 @@ def generate_pdf(request):
     if os.path.exists(docx_path):
         os.remove(docx_path)
 
-    pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}")
+    pdf_url = f"https://api.brosmed.uz{settings.MEDIA_URL}temp_exports/{os.path.basename(pdf_path)}"
 
     return JsonResponse({"url": pdf_url})
