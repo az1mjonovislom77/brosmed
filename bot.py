@@ -3,8 +3,7 @@ import os
 import httpx
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import FSInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
-import aiofiles
+from aiogram.types import BufferedInputFile, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from decouple import config
 import logging
 
@@ -17,9 +16,6 @@ EXPORT_ANALYSIS_URL = "https://api.brosmed.uz/export-by-phone/"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-
-TEMP_DIR = "temp_bot_files"
-os.makedirs(TEMP_DIR, exist_ok=True)
 
 user_state = {}
 
@@ -46,7 +42,6 @@ async def cmd_start(message: types.Message):
 
 @dp.message()
 async def handle_message(message: types.Message):
-
     chat_id = message.chat.id
     text = (message.text or "").strip()
 
@@ -72,9 +67,7 @@ async def handle_message(message: types.Message):
         await message.answer("Tekshirilmoqda...")
 
         try:
-
             async with httpx.AsyncClient(timeout=120) as client:
-
                 resp = await client.post(CHECK_PATIENT_URL, json={"patient_id": patient_id})
 
                 if resp.status_code != 200:
@@ -110,14 +103,11 @@ async def handle_message(message: types.Message):
                 await message.answer(f"{len(files)} ta tahlil topildi. Yuborilmoqda...")
 
                 for index, f in enumerate(files, start=1):
-
                     url = f["url"]
                     original_filename = f["filename"]
 
                     ext = os.path.splitext(original_filename)[1] or ".pdf"
-
                     filename = f"{patient_name}_{index}{ext}"
-                    temp_path = os.path.join(TEMP_DIR, filename)
 
                     r = await client.get(url)
 
@@ -125,12 +115,8 @@ async def handle_message(message: types.Message):
                         await message.answer("Faylni yuklab bo‘lmadi.")
                         continue
 
-                    async with aiofiles.open(temp_path, "wb") as doc:
-                        await doc.write(r.content)
-
-                    await message.answer_document(FSInputFile(temp_path))
-
-                    os.remove(temp_path)
+                    file = BufferedInputFile(r.content, filename=filename)
+                    await message.answer_document(file)
 
                     await asyncio.sleep(0.5)
 
