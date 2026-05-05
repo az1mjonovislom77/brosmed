@@ -105,7 +105,7 @@ def export_analysis_by_phone(request):
             }, "results": results_list}
 
         try:
-            logger.error(f"PDF DATA: {data}")g
+            logger.error(f"PDF DATA: {data}")
 
             response = requests.post("http://pdfservice:8001/pdf/generate/", json=data, timeout=60)
             response.raise_for_status()
