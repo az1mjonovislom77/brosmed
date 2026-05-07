@@ -33,7 +33,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     style.font.size = Pt(11)
 
     if header_image_path is None:
-        header_image_path = os.path.join(settings.BASE_DIR, "laboratory", "logo.jpg")
+        header_image_path = os.path.join(settings.BASE_DIR, "assets", "logo.jpg")
 
     if os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
