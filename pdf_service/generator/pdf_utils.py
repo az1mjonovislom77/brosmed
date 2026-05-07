@@ -20,13 +20,11 @@ def convert_docx_to_pdf(docx_path: str):
 
 def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None, analysis_title="Analiz"):
     doc = Document()
-
     section = doc.sections[0]
     section.top_margin = Inches(0.4)
     section.bottom_margin = Inches(0.4)
     section.left_margin = Inches(0.5)
     section.right_margin = Inches(0.5)
-
     style = doc.styles["Normal"]
     style.font.name = "Times New Roman"
     style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
@@ -60,7 +58,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
 
     info_table = doc.add_table(rows=4, cols=2)
     info_table.style = "Table Grid"
-
     info_table.cell(0, 0).text = "Bemor I.F.O"
     info_table.cell(0, 1).text = (
         f"{patient.get('name', '')} "
@@ -84,7 +81,6 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     subtitle_run.italic = True
     subtitle_run.font.size = Pt(13)
     subtitle.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
     valid_results = []
     seen_titles = set()
 
@@ -123,18 +119,14 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
         })
 
     if not valid_results:
-
         p = doc.add_paragraph("Natija hali kiritilmagan")
         p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
         run = p.runs[0]
         run.italic = True
         run.font.size = Pt(12)
 
     else:
-
         table = doc.add_table(rows=1, cols=3, style="Table Grid")
-
         hdr = table.rows[0].cells
         hdr[0].text = "Название анализа"
         hdr[1].text = "Результат анализа"
@@ -148,10 +140,8 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
             row[2].text = item["norma"]
 
     sign_table = doc.add_table(rows=1, cols=2)
-
     left_cell = sign_table.cell(0, 0)
     left_cell.paragraphs[0].add_run("Врач лаборант: _____________________")
-
     right_cell = sign_table.cell(0, 1)
     right_cell.paragraphs[0].add_run(analysis.get("doctor", ""))
 
