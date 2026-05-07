@@ -17,7 +17,7 @@ def convert_docx_to_pdf(docx_path: str):
     return docx_path.replace(".docx", ".pdf")
 
 
-def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None, analysis_title="Analiz"):
+def create_analysis_docx(patient, analysis, results_list, output_path, header_image_path=None, analysis_title="Analiz", seal_image_path=None):
     doc = Document()
 
     section = doc.sections[0]
@@ -31,10 +31,7 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
     style.font.size = Pt(11)
 
-    if header_image_path is None:
-        header_image_path = "/home/brosmed/laboratory/logo.jpg"
-
-    if os.path.exists(header_image_path):
+    if header_image_path and os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
         table.autofit = False
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -156,6 +153,12 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     left_cell.paragraphs[0].add_run("Врач лаборант: _____________________")
 
     right_cell = sign_table.cell(0, 1)
-    right_cell.paragraphs[0].add_run(analysis.get("doctor", ""))
+    p = right_cell.paragraphs[0]
+    p.add_run(analysis.get("doctor", ""))
+    if seal_image_path and os.path.exists(seal_image_path):
+        p_img = right_cell.add_paragraph()
+        run_img = p_img.add_run()
+        run_img.add_picture(seal_image_path, width=Inches(1.2))
+        p_img.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     doc.save(output_path)

@@ -25,9 +25,7 @@ def main_menu_kb():
         keyboard=[
             [KeyboardButton(text="Yangi ID kiritish")],
             [KeyboardButton(text="Yana tahlil olish")]
-        ],
-        resize_keyboard=True
-    )
+        ], resize_keyboard=True)
 
 
 @dp.message(Command("start"))
@@ -120,10 +118,7 @@ async def handle_message(message: types.Message):
 
                     await asyncio.sleep(0.5)
 
-                await message.answer(
-                    "Barcha tahlillar yuborildi!",
-                    reply_markup=main_menu_kb()
-                )
+                await message.answer("Barcha tahlillar yuborildi!", reply_markup=main_menu_kb())
 
         except Exception as e:
             logging.exception(e)

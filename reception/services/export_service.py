@@ -28,7 +28,8 @@ def generate_analysis_pdf(patient, analysis, results_qs):
     export_dir = getattr(settings, 'MEDIA_ROOT', '/tmp')
     docx_path = os.path.join(export_dir, docx_name)
 
-    header_image_path = os.path.join(settings.MEDIA_ROOT, "images", "logo.jpg")
+    header_image_path = os.path.join(settings.BASE_DIR, "laboratory", "loggo.jpg")
+    seal_image_path = os.path.join(settings.BASE_DIR, "laboratory", "pechat.jpg")
 
     create_analysis_docx(
         patient=patient,
@@ -36,7 +37,8 @@ def generate_analysis_pdf(patient, analysis, results_qs):
         results_list=results_list,
         output_path=docx_path,
         header_image_path=header_image_path,
-        analysis_title=analysis_title
+        analysis_title=analysis_title,
+        seal_image_path=seal_image_path
     )
 
     pdf_path = convert_docx_to_pdf(docx_path)
