@@ -30,12 +30,18 @@ def create_analysis_docx(patient, analysis, results_list, output_path, header_im
     style._element.rPr.rFonts.set(qn("w:eastAsia"), "Times New Roman")
     style.font.size = Pt(11)
 
-    from django.conf import settings
-    if header_image_path is None:
-        header_image_path = os.path.join(settings.BASE_DIR, "laboratory", "logo.jpg")
+    if header_image_path is None or pechat_image_path is None:
+        # Get absolute project root: D:/ATS/Brosmed or the equivalent inside docker
+        # pdf_utils.py is inside pdf_service/generator
+        # So BASE_DIR of project is parent of parent of parent
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(current_dir))
         
-    if pechat_image_path is None:
-        pechat_image_path = os.path.join(settings.BASE_DIR, "laboratory", "pechat.jpg")
+        if header_image_path is None:
+            header_image_path = os.path.join(project_root, "laboratory", "logo.jpg")
+            
+        if pechat_image_path is None:
+            pechat_image_path = os.path.join(project_root, "laboratory", "pechat.jpg")
 
     if os.path.exists(header_image_path):
         table = doc.add_table(rows=1, cols=2)
