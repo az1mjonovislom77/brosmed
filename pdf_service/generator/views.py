@@ -40,7 +40,6 @@ def generate_pdf(request):
         results_list=results,
         output_path=docx_path,
         header_image_path=None,
-        pechat_image_path=None,
         analysis_title=analysis.get("title", "Analiz")
     )
 
