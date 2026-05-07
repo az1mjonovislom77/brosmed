@@ -34,17 +34,14 @@ def generate_pdf(request):
     docx_filename = filename + ".docx"
     docx_path = os.path.join(export_dir, docx_filename)
 
-    header_image_path = os.path.join(settings.BASE_DIR, "laboratory", "loggo.jpg")
-    seal_image_path = os.path.join(settings.BASE_DIR, "laboratory", "pechat.jpg")
-
     create_analysis_docx(
         patient=patient,
         analysis=analysis,
         results_list=results,
         output_path=docx_path,
-        header_image_path=header_image_path,
-        analysis_title=analysis.get("title", "Analiz"),
-        seal_image_path=seal_image_path
+        header_image_path=None,
+        pechat_image_path=None,
+        analysis_title=analysis.get("title", "Analiz")
     )
 
     pdf_path = convert_docx_to_pdf(docx_path)
