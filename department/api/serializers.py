@@ -39,11 +39,9 @@ class ResultSerializer(serializers.ModelSerializer):
 
 
 class ResultGetSerializer(serializers.ModelSerializer):
-    analysis_result = AnalysisResultSerializer(many=True)
-
     class Meta:
         model = Result
-        fields = ['id', 'title', 'norma', 'analysis_result']
+        fields = ['id', 'title', 'norma']
 
 
 class DepartmentTypesSerializer(serializers.ModelSerializer):

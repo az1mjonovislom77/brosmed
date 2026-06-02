@@ -8,7 +8,6 @@ from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 
-
 def convert_docx_to_pdf(docx_path: str):
     output_dir = os.path.dirname(docx_path)
 
