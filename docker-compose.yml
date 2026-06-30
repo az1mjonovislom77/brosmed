@@ -7,9 +7,9 @@ services:
     restart: unless-stopped
 
     environment:
-      POSTGRES_DB: brosmed
+      POSTGRES_DB: brosmed_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_PASSWORD: YangiKuchliParol123
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
