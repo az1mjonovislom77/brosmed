@@ -9,13 +9,14 @@ def get_doctors_by_department(department_id):
 
 
 def get_all_consultations():
-    return Consultations.objects.all()
+    return Consultations.objects.select_related('user', 'patient')
 
 
 def get_consultation_stats(user):
     today = timezone.now().date()
 
-    oxirgi_konsultatsiyalar = Consultations.objects.filter(user=user).order_by('-created_at')[:10]
+    oxirgi_konsultatsiyalar = Consultations.objects.filter(user=user).select_related(
+        'user', 'patient').order_by('-created_at')[:10]
 
     return {
         "jami_bemorlar": Patient.objects.filter(user=user).count(),
@@ -41,4 +42,5 @@ def get_patient_by_id(patient_id):
 
 
 def get_consultations_for_patient(patient):
-    return Consultations.objects.filter(patient=patient).order_by('-created_at')
+    return Consultations.objects.filter(patient=patient).select_related(
+        'user', 'patient').order_by('-created_at')

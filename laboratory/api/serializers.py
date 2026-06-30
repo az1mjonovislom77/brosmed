@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from rest_framework import serializers
 from department.models import Result
 from department.api.serializers import DepartmentTypesNestSerializer, ResultSerializer
@@ -84,16 +85,20 @@ class AnalysisFullDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'patient', 'department_types', 'status', 'files', 'results', 'created_at']
 
     def get_results(self, obj):
-        results = Result.objects.filter(department_types=obj.department_types)
+        results = Result.objects.filter(department_types=obj.department_types).prefetch_related(
+            Prefetch(
+                'analysis_result',
+                queryset=AnalysisResult.objects.filter(patient=obj.patient),
+                to_attr='patient_analysis_results',
+            )
+        )
         serialized_results = []
         for result in results:
-            analysis_results = result.analysis_result.filter(patient=obj.patient)
             result_serializer = ResultSerializer(result, context=self.context)
             data = result_serializer.data
-            data['analysis_result'] = AnalysisResultNestedSerializer(analysis_results, many=True,
-                                                                     context=self.context).data
+            data['analysis_result'] = AnalysisResultNestedSerializer(
+                result.patient_analysis_results, many=True, context=self.context).data
             serialized_results.append(data)
-
         return serialized_results
 
 

@@ -1,6 +1,8 @@
 import os
 import json
 import logging
+from collections import defaultdict
+
 import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -42,6 +44,18 @@ def export_analysis_by_phone(request):
     if not analyses.exists():
         return JsonResponse({"error": "No analysis found"}, status=404)
 
+    dept_type_ids = list({a.department_types_id for a in analyses if a.department_types_id})
+    all_ars = (
+        AnalysisResult.objects
+        .filter(patient=patient, result__department_types_id__in=dept_type_ids)
+        .select_related('result')
+        .order_by('-created_at')
+    )
+    results_by_dept = defaultdict(list)
+    for ar in all_ars:
+        if ar.result:
+            results_by_dept[ar.result.department_types_id].append(ar)
+
     files_created = []
 
     for analysis in analyses:
@@ -51,13 +65,7 @@ def export_analysis_by_phone(request):
         results_list = []
         seen = set()
 
-        qs = (
-            AnalysisResult.objects
-            .filter(patient=patient, result__department_types=analysis.department_types)
-            .select_related("result")
-            .order_by("-created_at"))
-
-        for ar in qs:
+        for ar in results_by_dept.get(analysis.department_types_id, []):
 
             value = (ar.analysis_result or "").strip()
             if not value:

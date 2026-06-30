@@ -5,7 +5,7 @@ from reception.models import Patient, Disease, Analysis, AnalysisResult
 
 
 def get_all_patients():
-    return Patient.objects.all().order_by('-created_at')
+    return Patient.objects.select_related('user', 'department_types').order_by('-created_at')
 
 
 def get_patient_stats():
@@ -17,7 +17,7 @@ def get_patient_stats():
     erkaklar = Patient.objects.filter(gender=Patient.GenderChoice.MALE).count()
     ayollar = Patient.objects.filter(gender=Patient.GenderChoice.FEMALE).count()
     yangi_tugilganlar = Patient.objects.filter(birth_date__gte=one_year_ago).count()
-    oxirgi_bemorlar = Patient.objects.all().order_by('-created_at')[:10]
+    oxirgi_bemorlar = Patient.objects.select_related('user', 'department_types').order_by('-created_at')[:10]
 
     return {
         "qabul_qilinganlar": qabul_qilinganlar,
@@ -31,8 +31,10 @@ def get_patient_stats():
 
 def get_doctor_patients_and_diseases(user):
     patients = Patient.objects.filter(user=user).exclude(
-        patient_status=Patient.PatientStatus.finished).order_by('-created_at')
-    diseases = Disease.objects.filter(user=user).order_by('-id')
+        patient_status=Patient.PatientStatus.finished).select_related(
+        'user', 'department_types').order_by('-created_at')
+    diseases = Disease.objects.filter(user=user).select_related(
+        'patient__user', 'patient__department_types', 'department', 'department_types', 'user').order_by('-id')
     return patients, diseases
 
 
@@ -44,7 +46,8 @@ def get_patient_by_id(patient_id):
 
 
 def get_analyses_for_patient(patient):
-    return Analysis.objects.filter(patient=patient).order_by('-created_at')
+    return Analysis.objects.filter(patient=patient).select_related(
+        'department_types').prefetch_related('analysisfile_set').order_by('-created_at')
 
 
 def search_patients(search_query):
@@ -55,15 +58,17 @@ def search_patients(search_query):
         | Q(phone_number__icontains=search_query)
         | Q(passport__icontains=search_query)
         | Q(address__icontains=search_query)
-    ).distinct()
+    ).select_related('user', 'department_types').distinct()
 
 
 def get_all_diseases():
-    return Disease.objects.all()
+    return Disease.objects.select_related(
+        'patient__user', 'patient__department_types', 'department', 'department_types', 'user')
 
 
 def get_diseases_by_patient_id(patient_id):
-    return Disease.objects.filter(patient_id=patient_id)
+    return Disease.objects.filter(patient_id=patient_id).select_related(
+        'patient__user', 'patient__department_types', 'department', 'department_types', 'user')
 
 
 def get_analysis_export_data(patient_id, analysis_id):

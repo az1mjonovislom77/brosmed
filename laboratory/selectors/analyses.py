@@ -3,7 +3,7 @@ from django.utils import timezone
 from reception.models import Analysis, Patient
 
 def get_base_analysis_queryset():
-    return Analysis.objects.select_related("patient")
+    return Analysis.objects.select_related("patient", "department_types").prefetch_related("analysisfile_set")
 
 def get_stats_counts(qs, start, end):
     return qs.aggregate(
@@ -34,7 +34,7 @@ def get_analysis_stats(request):
     return counts, last_analysis_qs
 
 def search_analyses(search_value):
-    qs = get_base_analysis_queryset().prefetch_related("department_types")
+    qs = get_base_analysis_queryset()
     return qs.filter(
         Q(status__icontains=search_value)
         | Q(patient__name__icontains=search_value)
@@ -52,8 +52,8 @@ def get_patient_by_id(patient_id):
 
 def get_analysis_by_id_and_patient(analysis_id, patient):
     return (
-        Analysis.objects.select_related("patient")
-        .prefetch_related("department_types")
+        Analysis.objects.select_related("patient", "department_types")
+        .prefetch_related("analysisfile_set")
         .filter(id=analysis_id, patient=patient)
         .first()
     )
