@@ -1,59 +1,25 @@
-version: "3.9"
-
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: brosmed_postgres
-    restart: unless-stopped
-
-    environment:
-      POSTGRES_DB: brosmed_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: YangiKuchliParol123
-
+  main_app:
+    build: .
+    container_name: main_app
+    ports:
+      - "8000:8000"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d brosmed"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: brosmed_redis
-    restart: unless-stopped
+      - ./media:/app/media
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - pdfservice
+      - redis
 
   pdfservice:
     build: ./pdf_service
     container_name: pdf_service
-    restart: unless-stopped
-
     ports:
       - "8001:8001"
-
     volumes:
       - ./media:/app/media
 
-  main_app:
-    build: .
-    container_name: main_app
-    restart: unless-stopped
-
-    ports:
-      - "8000:8000"
-
-    volumes:
-      - ./media:/app/media
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-      pdfservice:
-        condition: service_started
-
-volumes:
-  postgres_data:
+  redis:
+    image: redis:7-alpine
+    container_name: brosmed_redis
