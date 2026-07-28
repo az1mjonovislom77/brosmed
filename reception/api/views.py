@@ -82,11 +82,15 @@ class PatientAnalysisAPIView(APIView):
 @extend_schema(tags=['Patient'], request=PatientSearchInputSerializer, responses=PatientSerializer(many=True))
 class PatientSearchAPIView(APIView):
     serializers_class = PatientSearchInputSerializer
+    pagination_class = AnalysisPagination
 
     def post(self, request):
         search = request.data.get("search", "")
         queryset = patient_selectors.search_patients(search)
-        return Response(PatientSerializer(queryset, many=True).data)
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        serializer = PatientSerializer(page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
 
 @extend_schema(tags=['Disease'])
