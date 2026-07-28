@@ -58,7 +58,7 @@ def search_patients(search_query):
         | Q(phone_number__icontains=search_query)
         | Q(passport__icontains=search_query)
         | Q(address__icontains=search_query)
-    ).select_related('user', 'department_types').distinct()
+    ).select_related('user', 'department_types').distinct().order_by('-created_at')
 
 
 def get_all_diseases():
