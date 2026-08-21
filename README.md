@@ -79,11 +79,20 @@ Example `.env`:
 ```
 SECRET_KEY='your_django_secret_key'
 DEBUG=True
-DATABASE_URL='postgres://user:password@host:port/dbname'
-REDIS_URL='redis://localhost:..../0'
+ALLOWED_HOSTS=*
+ENVIRON=local
+ENVIRONMENT=local
+DB_NAME='your_db_name'
+DB_USER='your_db_user'
+DB_PASSWORD='your_db_password'
+DB_HOST='your_db_host'
+REDIS_HOST='127.0.0.1'
+REDIS_PORT='6379'
 OPENAI_API_KEY='your_openai_api_key' # If using OpenAI features
-TELEGRAM_BOT_TOKEN='your_telegram_bot_token' # If using Telegram bot
+BOT_TOKEN='your_telegram_bot_token' # If using Telegram bot
 ```
+
+Note: PostgreSQL is only used when `ENVIRON=production`; otherwise the app falls back to SQLite (`db.sqlite3`).
 
 ### 5. Database Setup
 
@@ -126,8 +135,8 @@ python bot.py
 ## API Documentation
 
 The API documentation is automatically generated and available at:
-*   **Swagger UI**: `http://127.0.0.1:8000/swagger/`
-*   **ReDoc**: `http://127.0.0.1:8000/redoc/`
+*   **Swagger UI**: `http://127.0.0.1:8000/api/swagger/`
+*   **OpenAPI Schema**: `http://127.0.0.1:8000/api/schema/`
 
 ## Contributing
 
